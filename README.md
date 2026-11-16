@@ -4,6 +4,14 @@ Eine responsive Webseite mit dem Titel **Einsamer Wolf**, eigener SVG-Waldillust
 
 Die technische Struktur orientiert sich an [Wegweiser](https://github.com/tiljaeger/Wegweiser): TypeScript, Vite, Cloudflare Workers mit Static Assets und GitHub Actions für automatische Prüfungen. Karten- und Routingfunktionen sind nicht Teil dieser Webseite.
 
+## Digitaler Charakterbogen
+
+Die Webseite enthält ein Aktionsblatt und ein Kampfprotokoll. Die beiden Register wechseln zwischen den Formularseiten. Eingaben werden automatisch im LocalStorage dieses Browsers auf diesem Gerät gespeichert. Ein Browserwechsel, privater Modus oder das Löschen von Websitedaten kann dazu führen, dass Einträge nicht verfügbar sind. Über **Daten exportieren** lässt sich ein JSON-Backup herunterladen und später über **Daten importieren** wiederherstellen. Ungültige Dateien werden abgelehnt, ohne gespeicherte Daten zu ersetzen. **Zurücksetzen** löscht die Einträge nach Bestätigung.
+
+**PDF erstellen** öffnet den Druckdialog des Browsers: Dort „Als PDF speichern“ wählen. Beide Seiten werden mit ihren eingetragenen Werten und ohne Bedienknöpfe ausgegeben. Im Seitenlayout kann bei Bedarf die Skalierung angepasst werden.
+
+Das Design folgt der Beschreibung in Issue #2; die dort genannten Originalfotos lagen bei der Umsetzung noch nicht vor und sind für einen genauen Abgleich erforderlich.
+
 ## Einrichtung und Ausführung
 
 Voraussetzung: Node.js 24 LTS mit npm (siehe `.nvmrc`).
@@ -24,6 +32,7 @@ Wrangler baut das Frontend nach `dist/` und stellt die Webseite unter `http://12
 ## Prüfungen
 
 ```sh
+npm test
 npm run typecheck
 npm run lint
 npm run build:worker
