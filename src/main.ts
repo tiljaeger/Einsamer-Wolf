@@ -1,3 +1,4 @@
+import { mountMap } from './map';
 import './style.css';
 import './sheet.css';
 import { renderForms } from './forms';
@@ -13,6 +14,7 @@ root.innerHTML = `
     <div class="sheet-tabs" aria-label="Formularseite auswählen">
       <button type="button" data-tab="aktionsblatt" aria-pressed="true">Aktionsblatt</button>
       <button type="button" data-tab="kampfprotokoll" aria-pressed="false">Kampfprotokoll</button>
+      <button type="button" data-tab="spielkarte" aria-pressed="false">Spielkarte</button>
     </div>
     <div class="sheet-actions">
       <button type="button" data-action="save">Speichern</button>
@@ -24,7 +26,7 @@ root.innerHTML = `
     </div>
     <p class="sheet-status" role="status" aria-live="polite"></p>
   </div>
-  <div class="sheet-pages">${renderForms()}</div>`;
+  <div class="sheet-pages">${renderForms()}<section class="sheet-panel" id="spielkarte" aria-label="Spielkarte"></section></div>`;
 
 const status = root.querySelector<HTMLElement>('.sheet-status')!;
 const upload = root.querySelector<HTMLInputElement>('.sheet-file')!;
@@ -68,6 +70,7 @@ function activate(id: string): void {
 
 try { data = loadData(); setStatus('Deine Einträge werden auf diesem Gerät gespeichert.'); }
 catch { storageReadable = false; setStatus('Die gespeicherten Daten konnten nicht gelesen werden. Sie wurden nicht überschrieben.'); }
+const map = mountMap(root.querySelector<HTMLElement>('#spielkarte')!, () => data.karte, karte => { data.karte = karte; persist(); }, setStatus);
 syncFields();
 activate('aktionsblatt');
 
@@ -97,8 +100,8 @@ root.addEventListener('click', event => {
   if (!button) return;
   if (button.dataset.tab) { activate(button.dataset.tab); return; }
   if (button.dataset.action === 'reset') {
-    if (!window.confirm('Alle Eingaben auf beiden Seiten löschen?')) return;
-    data = createEmptyData(); storageReadable = true; syncFields(); persist('Alle Eingaben wurden zurückgesetzt.');
+    if (!window.confirm('Alle Charakterbogen-Eingaben und Kartendaten löschen?')) return;
+    data = createEmptyData(); storageReadable = true; syncFields(); map.render(); persist('Alle Eingaben wurden zurückgesetzt.');
   } else if (button.dataset.action === 'save') {
     if (hasInvalid()) { setStatus('Bitte korrigiere die ungültigen Eingaben vor dem Speichern.'); return; }
     persist('Alle Eingaben wurden gespeichert.');
@@ -120,7 +123,7 @@ upload.addEventListener('change', async () => {
     if (file.size > 2_000_000) throw new Error('Die Datei ist zu groß (maximal 2 MB).');
     const imported = importJSON(await file.text());
     saveData(imported);
-    data = imported; storageReadable = true; syncFields(); setStatus('Charakterbogen importiert und gespeichert.');
+    data = imported; storageReadable = true; syncFields(); map.render(); setStatus('Charakterbogen importiert und gespeichert.');
   } catch (error) { setStatus(`Import nicht möglich: ${error instanceof Error ? error.message : 'unbekannter Fehler'}`); }
   finally { upload.value = ''; }
 });

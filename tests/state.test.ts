@@ -56,3 +56,22 @@ test('missing save yields a blank sheet; corrupted save remains untouched', () =
   assert.throws(() => loadData(storage));
   assert.equal(storage.getItem(STORAGE_KEY), '{kaputt');
 });
+
+test('map survives export and local restore; legacy backups get an empty map', () => {
+  const data = createEmptyData();
+  data.karte = { location: { x: 40, y: 60 }, waypoints: [{ x: 40, y: 60 }, { x: 200, y: 500 }], places: [{ x: 120, y: 300, name: '<Waldlager>', note: 'Hier rasten', category: 'Lager' }] };
+  const storage = fakeStorage(); saveData(importJSON(exportJSON(data)), storage);
+  assert.deepEqual(loadData(storage), data);
+  const legacy = { aktionsblatt: data.aktionsblatt, kampfprotokoll: data.kampfprotokoll };
+  assert.deepEqual(importJSON(JSON.stringify(legacy)).karte, createEmptyData().karte);
+});
+
+test('invalid map imports never replace a valid backup', () => {
+  const data = createEmptyData(); const storage = fakeStorage(); saveData(data, storage);
+  for (const location of [{ x: -1, y: 5 }, { x: 1, y: 701 }, { x: '2', y: 3 }, { x: null, y: 3 }]) {
+    assert.throws(() => importJSON(JSON.stringify({ ...data, karte: { ...data.karte, location } })), /Kartenkoordinaten/);
+  }
+  data.karte.places = [{ x: 0, y: 0, name: '', note: '', category: 'Ort' }];
+  assert.throws(() => saveData(data, storage), /Kartenort/);
+  assert.deepEqual(loadData(storage), createEmptyData());
+});

@@ -1,3 +1,4 @@
+import { emptyMap, parseMap, type MapData } from './map-state.ts';
 /** Versioned, browser-local data for the two sheets. Empty numeric fields remain empty. */
 export type NumericValue = number | '';
 
@@ -8,6 +9,7 @@ export interface CombatRound {
 }
 
 export interface CharacterData {
+  karte: MapData;
   aktionsblatt: {
     kaiDisziplinen: string[];
     waffen: string[];
@@ -28,6 +30,7 @@ export const STORAGE_KEY = 'einsamer-wolf-charakterbogen-v1';
 
 export function createEmptyData(): CharacterData {
   return {
+    karte: emptyMap(),
     aktionsblatt: {
       kaiDisziplinen: Array.from({ length: 5 }, () => ''),
       waffen: Array.from({ length: 2 }, () => ''),
@@ -90,6 +93,7 @@ export function parseCharacterData(value: unknown): CharacterData {
     };
   });
   return {
+    karte: parseMap(data.karte),
     aktionsblatt: {
       kaiDisziplinen: textArray(a.kaiDisziplinen, 5, 'Kai-Disziplinen'),
       waffen: textArray(a.waffen, 2, 'Waffen'),
