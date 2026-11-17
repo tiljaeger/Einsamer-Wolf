@@ -22,10 +22,12 @@ const CACHE_PREFIX = 'einsamer-wolf-shell-';
 const CACHE_NAME = CACHE_PREFIX + ${JSON.stringify(revision)};
 const ASSETS = ${JSON.stringify(assets)};
 self.addEventListener('install', event => {
-  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS.map(url => new Request(url, { cache: 'reload' })))));
+  event.waitUntil(caches.open(CACHE_NAME)
+    .then(cache => cache.addAll(ASSETS.map(url => new Request(url, { cache: 'reload' }))))
+    .then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', event => {
-  event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME).map(key => caches.delete(key)))));
+  event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME).map(key => caches.delete(key)))).then(() => self.clients.claim()));
 });
 self.addEventListener('fetch', event => {
   const request = event.request;

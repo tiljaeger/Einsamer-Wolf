@@ -40,6 +40,7 @@ function simulation(source: string, shared?: Map<string, Map<string, string>>, m
   const handlers = new Map<string, (event: never) => void>();
   const stores = shared ?? new Map<string, Map<string, string>>();
   const fetches: string[] = [];
+  const updates: string[] = [];
   const resources = new Map([
     ['/', 'startseite'], ['/index.html', 'startseite'], ['/assets/app.js', 'javascript'], ['/assets/style.css', 'css'],
   ]);
@@ -79,6 +80,8 @@ function simulation(source: string, shared?: Map<string, Map<string, string>>, m
   };
   const self = {
     location: { origin },
+    async skipWaiting() { updates.push('skipWaiting'); },
+    clients: { async claim() { updates.push('claim'); } },
     addEventListener(type: string, handler: (event: never) => void) { handlers.set(type, handler); },
   };
   const fetch = async (request: RequestLike) => { fetches.push(request.url); return 'net:' + request.url; };
@@ -99,7 +102,7 @@ function simulation(source: string, shared?: Map<string, Map<string, string>>, m
     handlers.get('fetch')!(event as never);
     return response ? { handled: true, value: await response } : { handled: false };
   }
-  return { stores, fetches, lifecycle, request };
+  return { stores, fetches, updates, lifecycle, request };
 }
 
 test('installation precaches the app shell and serves navigations and assets offline', async () => {
@@ -134,7 +137,9 @@ test('a changed build has a new cache and activation removes only old app caches
   await newWorker.lifecycle('install');
   const appCaches = [...newWorker.stores.keys()].filter(key => key.startsWith('einsamer-wolf-shell-'));
   assert.equal(appCaches.length, 2, 'changed source must create a new cache');
+  assert.deepEqual(newWorker.updates, ['skipWaiting']);
   await newWorker.lifecycle('activate');
+  assert.deepEqual(newWorker.updates, ['skipWaiting', 'claim']);
   assert.equal(newWorker.stores.has(oldCache), false);
   assert.equal(newWorker.stores.has('another-application-cache'), true);
   assert.equal([...newWorker.stores.keys()].filter(key => key.startsWith('einsamer-wolf-shell-')).length, 1);
@@ -159,6 +164,7 @@ test('incomplete downloads reject installation without replacing the old cache',
   const [oldCache] = oldWorker.stores.keys();
   const newWorker = simulation(second, oldWorker.stores, '/assets/app.js');
   await assert.rejects(newWorker.lifecycle('install'), /Missing fixture/);
+  assert.deepEqual(newWorker.updates, [], 'an incomplete update must not replace the active worker');
   assert.equal(oldWorker.stores.has(oldCache), true);
   assert.deepEqual(await oldWorker.request('/', 'GET', 'navigate'), { handled: true, value: 'startseite' });
 });
