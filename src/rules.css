@@ -1,0 +1,13 @@
+.rules-panel { background: #fbf5e7; color: #29271f; padding: clamp(1rem, 4vw, 3rem); line-height: 1.75; overflow-wrap: anywhere; }
+.rules-panel h2, .rules-panel h3, .rules-panel h4 { color: #29271f; line-height: 1.3; scroll-margin-top: 2rem; }
+.rules-panel h3 { margin-top: 2.5rem; }
+.rules-panel a, .rule-link { color: #704219; text-decoration: underline; text-underline-offset: .2em; }
+.rules-panel a:focus-visible, .rule-link:focus-visible { outline: 3px solid #704219; outline-offset: 4px; }
+.rules-panel li { margin-block: .5rem; }
+.rules-panel nav { border-bottom: 1px solid #9c896a; padding-bottom: 1rem; }
+.rules-notice { border-left: 4px solid #704219; padding: 1rem; background: #eee0c7; }
+.rules-table { overflow-x: auto; }
+.rules-table table { border-collapse: collapse; width: 100%; margin-block: 1rem; }
+.rules-table th, .rules-table td { text-align: left; border: 1px solid #9c896a; padding: .5rem; }
+.rule-link, .kai-rank { display: block; margin: .5rem; font-size: .9rem; }
+@media print { #spielregeln.sheet-panel, #spielregeln.sheet-panel[hidden], .rule-link, .kai-rank { display: none !important; } }

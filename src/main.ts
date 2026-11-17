@@ -1,3 +1,6 @@
+import chapters from './rules-data.json';
+import { renderRules, isRulesHash, kaiRank } from './rules';
+import './rules.css';
 import { mountMap } from './map';
 import './style.css';
 import './sheet.css';
@@ -14,6 +17,7 @@ root.innerHTML = `
     <div class="sheet-tabs" aria-label="Formularseite auswählen">
       <button type="button" data-tab="aktionsblatt" aria-pressed="true">Aktionsblatt</button>
       <button type="button" data-tab="kampfprotokoll" aria-pressed="false">Kampfprotokoll</button>
+      <button type="button" data-tab="spielregeln" aria-pressed="false">Spielregeln</button>
       <button type="button" data-tab="spielkarte" aria-pressed="false">Spielkarte</button>
     </div>
     <div class="sheet-actions">
@@ -26,7 +30,7 @@ root.innerHTML = `
     </div>
     <p class="sheet-status" role="status" aria-live="polite"></p>
   </div>
-  <div class="sheet-pages">${renderForms()}<section class="sheet-panel" id="spielkarte" aria-label="Spielkarte"></section></div>`;
+  <div class="sheet-pages">${renderForms()}<section class="sheet-panel" id="spielkarte" aria-label="Spielkarte"></section>${renderRules(chapters)}</div>`;
 
 const status = root.querySelector<HTMLElement>('.sheet-status')!;
 const upload = root.querySelector<HTMLInputElement>('.sheet-file')!;
@@ -50,7 +54,11 @@ function mirror(field: HTMLInputElement | HTMLTextAreaElement): void {
   const output = field.parentElement?.querySelector<HTMLElement>('.sheet-field-value');
   if (output) output.textContent = field.value;
 }
+function updateRank(): void {
+  root!.querySelector<HTMLElement>('.kai-rank')!.textContent = kaiRank(data.aktionsblatt.kaiDisziplinen);
+}
 function syncFields(): void {
+  updateRank();
   for (const field of fields) {
     field.value = String(getPath(data, field.dataset.path!));
     field.setCustomValidity('');
@@ -72,7 +80,16 @@ try { data = loadData(); setStatus('Deine Einträge werden auf diesem Gerät ges
 catch { storageReadable = false; setStatus('Die gespeicherten Daten konnten nicht gelesen werden. Sie wurden nicht überschrieben.'); }
 const map = mountMap(root.querySelector<HTMLElement>('#spielkarte')!, () => data.karte, karte => { data.karte = karte; persist(); }, setStatus);
 syncFields();
+function followRulesHash(): void {
+  if (!isRulesHash(location.hash)) return;
+  activate('spielregeln');
+  const target = document.getElementById(location.hash.slice(1));
+  target?.focus({ preventScroll: true });
+  target?.scrollIntoView();
+}
+window.addEventListener('hashchange', followRulesHash);
 activate('aktionsblatt');
+followRulesHash();
 
 for (const field of fields) field.addEventListener('input', () => {
   const path = field.dataset.path!;
@@ -87,6 +104,7 @@ for (const field of fields) field.addEventListener('input', () => {
   }
   try {
     data = parseCharacterData(candidate);
+    updateRank();
     persist(hasInvalid() ? 'Gespeichert. Bitte prüfe noch ungültige Eingaben.' : undefined);
   } catch (error) {
     const invalid = endurance ? affected.find(item => item.dataset.path === 'kampfprotokoll.ausdauerAktuell')! : field;
@@ -96,9 +114,11 @@ for (const field of fields) field.addEventListener('input', () => {
 });
 
 root.addEventListener('click', event => {
+  const link = (event.target as HTMLElement).closest<HTMLAnchorElement>('a');
+  if (link && isRulesHash(link.hash) && link.hash === location.hash) followRulesHash();
   const button = (event.target as HTMLElement).closest<HTMLButtonElement>('button');
   if (!button) return;
-  if (button.dataset.tab) { activate(button.dataset.tab); return; }
+  if (button.dataset.tab) { activate(button.dataset.tab); if (location.hash) history.replaceState(null, '', location.pathname + location.search); return; }
   if (button.dataset.action === 'reset') {
     if (!window.confirm('Alle Charakterbogen-Eingaben und Kartendaten löschen?')) return;
     data = createEmptyData(); storageReadable = true; syncFields(); map.render(); persist('Alle Eingaben wurden zurückgesetzt.');

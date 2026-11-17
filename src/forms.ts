@@ -27,10 +27,10 @@ function combatRows(): string {
 export function renderForms(): string {
   return `<section class="sheet-panel" id="aktionsblatt" aria-labelledby="aktionsblatt-title">
   <article class="sheet-page sheet-action">
-    <h2 class="sheet-title" id="aktionsblatt-title">AKTIONSBLATT</h2>
+    <h2 class="sheet-title" id="aktionsblatt-title">AKTIONSBLATT</h2><a class="rule-link" href="#rules-startwerte">Regeln zu Startwerten</a>
     <section class="sheet-section sheet-disciplines" aria-labelledby="discipline-heading">
       <h3 class="sheet-heading" id="discipline-heading">KAI DISZIPLINEN</h3>
-      <div class="sheet-rows sheet-box">${numberedRows('aktionsblatt.kaiDisziplinen', 'Kai-Disziplin', 5)}</div>
+      <p class="kai-rank" aria-live="polite"></p><a class="rule-link" href="#rules-disziplinen">Kai-Disziplinen und Heilung nachlesen</a><a class="rule-link" href="#rules-kai-rang">Kai-Ränge nachlesen</a><div class="sheet-rows sheet-box">${numberedRows('aktionsblatt.kaiDisziplinen', 'Kai-Disziplin', 5)}</div>
     </section>
     <section class="sheet-section sheet-weapons" aria-labelledby="weapons-heading">
       <h3 class="sheet-heading" id="weapons-heading">WAFFEN <span>(maximal 2 Waffen)</span></h3>
@@ -38,7 +38,7 @@ export function renderForms(): string {
       <div class="sheet-notes"><p>Bei Kampf mit einer Waffe einer erlernten Waffendisziplin KS +2.</p><p>Bei Kampf ohne Waffe KS -4.</p></div>
     </section>
     <section class="sheet-section sheet-rucksack" aria-labelledby="backpack-heading">
-      <h3 class="sheet-heading" id="backpack-heading">RUCKSACK <span>(maximal 8 Gegenstände)</span></h3>
+      <a class="rule-link" href="#rules-inventar">Ausrüstungsregeln nachlesen</a><h3 class="sheet-heading" id="backpack-heading">RUCKSACK <span>(maximal 8 Gegenstände)</span></h3>
       <div class="sheet-box sheet-backpack">
         <div class="sheet-backpack-items"><h4>GEGENSTÄNDE</h4><div class="sheet-rows">${numberedRows('aktionsblatt.rucksack', 'Gegenstand', 8)}</div><p class="sheet-notes">können jederzeit außerhalb eines Kampfes abgelegt oder ausgewechselt werden.</p></div>
         <div class="sheet-meals"><h4>MAHLZEITEN</h4>${numberField('aktionsblatt.mahlzeiten', 'Anzahl Mahlzeiten', 'min="0"')}<p class="sheet-notes">-3 AP falls keine Mahlzeit zu sich genommen wird, wenn dies angeordnet ist.</p></div>
@@ -57,7 +57,7 @@ export function renderForms(): string {
       <section class="sheet-box sheet-stat"><h3 class="sheet-heading">KAMPFSTÄRKE</h3>${numberField('kampfprotokoll.kampfstaerke', 'Kampfstärke')}</section>
       <section class="sheet-box sheet-stat sheet-endurance"><h3 class="sheet-heading">AUSDAUERPUNKTE</h3><div class="sheet-endurance-fields"><label>Grundwert ${numberField('kampfprotokoll.ausdauerGrundwert', 'Ausdauer Grundwert', 'min="0"')}</label><label>Aktuell ${numberField('kampfprotokoll.ausdauerAktuell', 'Aktuelle Ausdauerpunkte', 'min="0"')}</label></div><div class="sheet-notes"><p>kann nie über den Grundwert steigen.</p><p>0 = Tot</p></div></section>
     </div>
-    <h2 class="sheet-title" id="kampfprotokoll-title">KAMPFPROTOKOLL</h2>
+    <h2 class="sheet-title" id="kampfprotokoll-title">KAMPFPROTOKOLL</h2><a class="rule-link" href="#rules-kampf">Kampfregeln und fehlende Referenztabellen</a>
     <div class="sheet-combat-headings" aria-hidden="true"><span>AUSDAUERPUNKTE</span><span></span><span>AUSDAUERPUNKTE</span></div>
     <div class="sheet-rounds sheet-box">${combatRows()}</div>
     <div class="sheet-ornament" aria-hidden="true">✦</div>
