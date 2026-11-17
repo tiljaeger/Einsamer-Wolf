@@ -20,7 +20,7 @@ Die Webseite ist als Progressive Web App (PWA) installierbar. Zuerst die Webseit
 - **Android:** In Chrome die Webseite öffnen und im Menü „App installieren“ oder „Zum Startbildschirm hinzufügen“ wählen. Die genaue Bezeichnung hängt vom Gerät und Browser ab.
 - **Desktop:** In einem unterstützten Browser die Installationsfunktion in der Adressleiste oder im Browsermenü auswählen.
 
-Anschließend die installierte App bei bestehender Verbindung einmal öffnen. Danach lassen sich die heruntergeladenen Seiten auch ohne Internetverbindung aufrufen. Aktualisierungen werden geladen, sobald wieder eine Verbindung besteht; eine neue Version wird aktiv, nachdem ältere App-Fenster geschlossen wurden.
+Anschließend die installierte App bei bestehender Verbindung einmal öffnen. Danach lassen sich die heruntergeladenen Seiten auch ohne Internetverbindung aufrufen. Aktualisierungen werden geladen, sobald wieder eine Verbindung besteht; eine vollständig heruntergeladene Version wird automatisch aktiviert und beim nächsten Öffnen oder Neuladen angezeigt. Bereits geöffnete Formulare werden nicht automatisch neu geladen.
 
 Die Einträge verbleiben lokal. Browser und installierte App können getrennte Speicher verwenden, insbesondere auf iPhone und iPad. Um einen bestehenden Bogen zu übernehmen, zuerst im Browser als JSON exportieren und dann in der installierten App importieren. Daten regelmäßig als JSON sichern: Beim Löschen von Website- oder App-Daten können lokale Einträge verloren gehen.
 
@@ -100,6 +100,8 @@ Das Register **Spielregeln** enthält alle sechs Kapitel für Band 1 aus Issue #
 
 Direktlinks wie `/#rules-kampf`, `/#rules-disziplinen`, `/#heilung` und `/#waffenkunde` öffnen das Handbuch automatisch. Aktionsblatt, Inventar und Kampfprotokoll bieten Regelverweise. Der Kai-Rang folgt der Zahl unterschiedlicher, nicht leerer Disziplin-Einträge; ein leerer Bogen erhält keinen angenommenen Startrang. Das bestehende Band-1-Formular behält seine fünf Disziplinfelder. Spielmechaniken und gespeichertes Datenformat bleiben unverändert.
 
-Die vollständige Kampfresultat-Tabelle und Zufallszahlentabelle fehlen weiterhin und werden ausdrücklich als ausstehend markiert. Das Regelbeispiel ersetzt keine vollständige Tabelle. Es erfolgt keine automatische Kampfauswertung. Die Regeltexte sind im App-Bundle enthalten und stehen nach Installation des Service Workers auch offline in der PWA bereit. Nach einem Update alle offenen App-Fenster schließen und erneut öffnen, damit der neue Service Worker aktiviert wird.
+Die vollständige Kampfresultat-Tabelle und Zufallszahlentabelle fehlen weiterhin und werden ausdrücklich als ausstehend markiert. Das Regelbeispiel ersetzt keine vollständige Tabelle. Es erfolgt keine automatische Kampfauswertung. Die Regeltexte sind im App-Bundle enthalten und stehen nach Installation des Service Workers auch offline in der PWA bereit. Nach einem Update die App neu öffnen oder die Seite neu laden. Vollständig heruntergeladene Updates aktivieren ihren Service Worker automatisch, auch wenn noch andere App-Fenster geöffnet sind. Ein automatisches Neuladen laufender Formulare erfolgt nicht.
 
 Prüfung: 14 einzelne Tests (Inhalte, Anker, Renderer, Rang, Speicherung und PWA), Typprüfung, ESLint und Worker-Dry-Run erfolgreich. Produktionsbuild in Chromium bei 1280 und 390 Pixeln geprüft: Register, Inhaltsverzeichnis, Kontextlink, Direktlink nach Reload, dynamischer Rang und Offline-Reload des Handbuchs; kein horizontaler Überlauf oder JavaScript-Fehler.
+
+Die Hauptnavigation und eine zusätzliche Schaltfläche auf der Startseite führen direkt zu **Spielregeln**, ohne zuerst den Charakterbogen suchen zu müssen.
