@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 700">
+<defs><pattern id="grid" width="100" height="100" patternUnits="userSpaceOnUse"><path d="M100 0H0V100" fill="none" stroke="#b7ab86" stroke-width="1"/></pattern></defs>
+<rect width="1000" height="700" fill="#e9dfbf"/><path d="M0 0H230Q170 100 240 180T190 350T230 520T140 700H0Z" fill="#a2c0bc"/>
+<path d="M500 0Q450 180 610 300T570 490T690 700" fill="none" stroke="#91b8bd" stroke-width="16"/>
+<g fill="#798366" stroke="#58644d" stroke-width="3"><path d="M670 130l65-100 70 100zM760 180l80-120 80 120zM700 240l75-120 80 120z"/><path d="M280 360l30-65 30 65zM320 390l35-80 35 80zM370 340l30-65 30 65zM290 440l35-80 35 80z"/></g>
+<rect width="1000" height="700" fill="url(#grid)"/><g fill="#4a5141" font-family="serif"><text x="50" y="80" font-size="25">Reisekarte</text><text x="50" y="110" font-size="15">Freie Skizze · keine offizielle Magnamund-Karte</text><text x="920" y="55" font-size="30">N ↑</text></g></svg>

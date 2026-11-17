@@ -2,7 +2,7 @@
 
 Eine responsive Webseite mit dem Titel **Einsamer Wolf**, eigener SVG-Waldillustration und deutschen Texten. Keine externen Schriftarten, Bilddienste oder Laufzeit-Abhängigkeiten.
 
-Die technische Struktur orientiert sich an [Wegweiser](https://github.com/tiljaeger/Wegweiser): TypeScript, Vite, Cloudflare Workers mit Static Assets und GitHub Actions für automatische Prüfungen. Karten- und Routingfunktionen sind nicht Teil dieser Webseite.
+Die technische Struktur orientiert sich an [Wegweiser](https://github.com/tiljaeger/Wegweiser): TypeScript, Vite, Cloudflare Workers mit Static Assets und GitHub Actions für automatische Prüfungen. Eine lokale Spielkarte ergänzt den Charakterbogen; Routingdienste werden nicht verwendet.
 
 ## Digitaler Charakterbogen
 
@@ -77,3 +77,19 @@ Der GitHub-Workflow **Deploy to Cloudflare** lässt sich manuell starten. Dafür
 - `.github/workflows/deploy.yml`: manuelles Cloudflare-Deployment
 
 Tastaturfokus, mobiles Layout, SVG-Bildbeschreibung und reduzierte Bewegung werden berücksichtigt. Die Illustrationen und Texte wurden für dieses Projekt erstellt. Ein lokaler Build allein veröffentlicht die Seite noch nicht.
+
+## Spielkarte (Issue #3)
+
+Das Register **Spielkarte** steht im Browser und in der PWA zur Verfügung. Zuerst eine Aktion wählen und dann auf die Karte klicken/tippen: Standort setzen, Wegpunkt hinzufügen oder Ort hinzufügen. Im Verschiebemodus lässt sich die Karte ziehen; die Zoomknöpfe funktionieren auch auf Touchgeräten. In der fokussierten Karte verschieben die Pfeiltasten den Ausschnitt, +/− zoomen. Die Koordinateneingabe ist eine Alternative zum Kartenklick und verwendet X = 0–1000, Y = 0–700 (von links oben).
+
+Die nummerierten Wegpunkte bilden den Reiseweg in ihrer Reihenfolge. Über **Verschieben** und eine neue Kartenposition oder Koordinateneingabe lassen sich Standort, Wegpunkte und Orte versetzen. **Löschen** entfernt einzelne Einträge. Ein Klick auf einen Ort im Verschiebemodus fokussiert dessen Editor. Namen, optionale Notizen und Kategorien (Ort, Gefahr, Lager) werden bei gültiger Eingabe automatisch gespeichert; **Ort speichern** aktualisiert zusätzlich die Darstellung. Der letzte gültige Ortsname bleibt erhalten, wenn ein Name geleert wird.
+
+Kartendaten liegen gemeinsam mit dem Charakterbogen im bestehenden lokalen Speicher und JSON-Backup. Ältere Backups ohne `karte` werden mit einer leeren Karte importiert. Import ersetzt den gesamten aktuellen Stand, einschließlich Karte. Zurücksetzen löscht nach Bestätigung auch die Kartendaten. Ungültige Kartendaten werden vor dem Ersetzen abgelehnt. Kein GPS, keine externen Kartenanfragen und keine Übertragung der Einträge. Wie beim Charakterbogen empfiehlt sich regelmäßiger JSON-Export.
+
+### Kartenquelle, Rechte und Austausch
+
+Als Rechercheansatz für veröffentlichte Magnamund-Karten dient [Project Aon – Maps](https://www.projectaon.org/en/Main/Maps); die [Project-Aon-Lizenz](https://www.projectaon.org/en/Main/License) ist gesondert zu prüfen. Der Abruf war in dieser Arbeitsumgebung am 17.11.2026 durch die Netzwerkregel mit HTTP 403 gesperrt. Daher sind konkrete Wiederverwendungs-, Bearbeitungs- und Offline-Rechte hier **nicht verifiziert**. Fremde Karten wurden weder kopiert noch eingebunden; eine frei zugängliche Abbildung allein gilt nicht als Nutzungserlaubnis.
+
+Die mitgelieferte Grundlage `public/maps/reisekarte.svg` ist eine für dieses Projekt selbst erstellte schematische Illustration, keine geografisch genaue oder offizielle Magnamund-Karte. Sie wird unter **CC0 1.0 Universal** bereitgestellt ([Rechtstext](https://creativecommons.org/publicdomain/zero/1.0/)); Vervielfältigung, Bearbeitung und Offline-Speicherung sind erlaubt, ein Quellenhinweis ist nicht vorgeschrieben. Die Oberfläche kennzeichnet sie als eigene Skizze. Sie nutzt keine fremden Kartenkacheln, Schriftarten oder Bildbestandteile.
+
+Für eine spätere, rechtlich geprüfte Karte die Datei ersetzen oder `MAP_BACKGROUND` in `src/map.ts` ändern. Das Overlay verwendet einen festen Raum von 1000 × 700 Einheiten. Eine neue Grundlage sollte auf diesen Raum abgestimmt werden; andernfalls müssen bestehende Positionen migriert werden. Bei fremden Grundlagen Attribution, Lizenz und Offline-Rechte vor Einbindung erneut prüfen. Der vorhandene Service Worker nimmt die lokale SVG und das Kartenmodul automatisch in den App-Cache auf. Nach vollständiger Installation ist die Karte offline nutzbar; Browser können Cache und lokale Daten löschen. Ein abgebrochener erster Download garantiert keine Offline-Verfügbarkeit.
