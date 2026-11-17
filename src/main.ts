@@ -124,3 +124,12 @@ upload.addEventListener('change', async () => {
   } catch (error) { setStatus(`Import nicht möglich: ${error instanceof Error ? error.message : 'unbekannter Fehler'}`); }
   finally { upload.value = ''; }
 });
+
+// Offline-Unterstützung wird nur für den Produktionsbuild registriert.
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {
+      // Die Seite und der lokale Charakterbogen funktionieren auch ohne Service Worker.
+    });
+  });
+}

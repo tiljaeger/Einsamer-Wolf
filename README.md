@@ -12,6 +12,18 @@ Die Webseite enthält ein Aktionsblatt und ein Kampfprotokoll. Die beiden Regist
 
 Das Design folgt der Beschreibung in Issue #2; die dort genannten Originalfotos lagen bei der Umsetzung noch nicht vor und sind für einen genauen Abgleich erforderlich.
 
+## Als App installieren und offline nutzen
+
+Die Webseite ist als Progressive Web App (PWA) installierbar. Zuerst die Webseite mit Internetverbindung öffnen und kurz warten, damit die für die Offline-Nutzung benötigten Dateien gespeichert werden.
+
+- **iPhone/iPad:** In Safari öffnen, auf „Teilen“ und anschließend „Zum Home-Bildschirm“ tippen.
+- **Android:** In Chrome die Webseite öffnen und im Menü „App installieren“ oder „Zum Startbildschirm hinzufügen“ wählen. Die genaue Bezeichnung hängt vom Gerät und Browser ab.
+- **Desktop:** In einem unterstützten Browser die Installationsfunktion in der Adressleiste oder im Browsermenü auswählen.
+
+Anschließend die installierte App bei bestehender Verbindung einmal öffnen. Danach lassen sich die heruntergeladenen Seiten auch ohne Internetverbindung aufrufen. Aktualisierungen werden geladen, sobald wieder eine Verbindung besteht; eine neue Version wird aktiv, nachdem ältere App-Fenster geschlossen wurden.
+
+Die Einträge verbleiben lokal. Browser und installierte App können getrennte Speicher verwenden, insbesondere auf iPhone und iPad. Um einen bestehenden Bogen zu übernehmen, zuerst im Browser als JSON exportieren und dann in der installierten App importieren. Daten regelmäßig als JSON sichern: Beim Löschen von Website- oder App-Daten können lokale Einträge verloren gehen.
+
 ## Einrichtung und Ausführung
 
 Voraussetzung: Node.js 24 LTS mit npm (siehe `.nvmrc`).
