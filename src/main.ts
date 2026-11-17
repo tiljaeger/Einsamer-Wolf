@@ -1,3 +1,5 @@
+import { referenceTables } from './tables-data';
+import { renderTables, mountTables } from './tables';
 import chapters from './rules-data.json';
 import { renderRules, isRulesHash, kaiRank } from './rules';
 import './rules.css';
@@ -30,7 +32,9 @@ root.innerHTML = `
     </div>
     <p class="sheet-status" role="status" aria-live="polite"></p>
   </div>
-  <div class="sheet-pages">${renderForms()}<section class="sheet-panel" id="spielkarte" aria-label="Spielkarte"></section>${renderRules(chapters)}</div>`;
+  <div class="sheet-pages">${renderForms()}<section class="sheet-panel" id="spielkarte" aria-label="Spielkarte"></section>${renderRules(chapters, renderTables(referenceTables))}</div>`;
+
+mountTables(root.querySelector<HTMLElement>('#spielregeln')!, referenceTables);
 
 const status = root.querySelector<HTMLElement>('.sheet-status')!;
 const upload = root.querySelector<HTMLInputElement>('.sheet-file')!;
