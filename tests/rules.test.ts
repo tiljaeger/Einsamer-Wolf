@@ -14,7 +14,7 @@ test('all six chapters and table values appear with working chapter anchors', ()
     assert.ok(isRulesHash(`#rules-${chapter.id}`));
   }
   assert.equal((html.match(/<table>/g) ?? []).length, 2);
-  for (const text of ['10–19', '20–29', '50 Goldkronen', 'acht', '−4 Kampfstärke', '+1 Ausdauer', '4 Ausdauer', '−3 AU', '−6 AU', 'Meister', 'Geist über Materie', 'Breitschwert', 'noch ausstehend']) assert.ok(html.includes(text), text);
+  for (const text of ['10–19', '20–29', '50 Goldkronen', 'acht', '−4 Kampfstärke', '+1 Ausdauer', '4 Ausdauer', '−3 AU', '−6 AU', 'Meister', 'Geist über Materie', 'Breitschwert']) assert.ok(html.includes(text), text);
   assert.ok(html.includes('id="heilung"'));
   assert.ok(html.includes('id="waffenkunde"'));
 });

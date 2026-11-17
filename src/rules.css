@@ -11,3 +11,24 @@
 .rules-table th, .rules-table td { text-align: left; border: 1px solid #9c896a; padding: .5rem; }
 .rule-link, .kai-rank { display: block; margin: .5rem; font-size: .9rem; }
 @media print { #spielregeln.sheet-panel, #spielregeln.sheet-panel[hidden], .rule-link, .kai-rank { display: none !important; } }
+
+.combat-lookup { display: flex; flex-wrap: wrap; gap: 1rem; align-items: end; margin-block: 1rem; }
+.combat-lookup label { display: grid; gap: .3rem; }
+.rules-panel .combat-lookup input, .rules-panel .combat-lookup select, .rules-panel .combat-lookup button, .rules-panel .random-table button { background: #fbf5e7; color: #29271f; font: inherit; border: 1px solid #704219; border-radius: 3px; min-height: 44px; padding: .4rem .6rem; }
+.combat-lookup input { width: 9rem; max-width: 100%; }
+.combat-lookup button, .random-table button { cursor: pointer; }
+.rules-panel button:focus-visible, .rules-panel input:focus-visible, .rules-panel select:focus-visible, .rules-panel [tabindex="0"]:focus-visible { outline: 3px solid #704219; outline-offset: 3px; }
+.combat-scroll { max-width: 100%; }
+.combat-table { min-width: 1200px; font-variant-numeric: tabular-nums; }
+.combat-table caption, .random-table caption { text-align: left; font-weight: bold; }
+.combat-table td span { display: block; white-space: nowrap; }
+.combat-table .selected-column, .combat-table .selected-row > * { background: #eee0c7; }
+.combat-table .selected-row > .selected-column { background: #704219; color: #fff; font-weight: bold; outline: 2px solid #29271f; outline-offset: -2px; }
+.combat-table th:first-child { position: sticky; left: 0; background: #fbf5e7; z-index: 1; }
+.rules-panel .random-table { width: max-content; border-collapse: separate; border-spacing: 2px; }
+.random-table td { padding: 0; border: 0; }
+.random-table button { width: 44px; height: 44px; padding: 0; }
+.rules-panel .random-table button[aria-pressed="true"] { color: #fff; background: #704219; border: 3px double #fff; font-weight: bold; }
+
+.rules-panel .combat-lookup button:hover, .rules-panel .random-table button:hover { background: #eee0c7; color: #29271f; }
+.rules-panel .random-table button[aria-pressed="true"]:hover { background: #704219; color: #fff; }

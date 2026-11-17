@@ -34,18 +34,19 @@ export function renderMarkdown(markdown: string): string {
   return html;
 }
 
-export function renderRules(chapters: Chapter[]): string {
+export function renderRules(chapters: Chapter[], tablesHTML = ''): string {
   return `<section class="sheet-panel rules-panel" id="spielregeln" aria-labelledby="rules-title" hidden>
     <h2 id="rules-title" tabindex="-1">Spielregeln · Band 1</h2>
     <p>Eigenständig formulierte Zusammenfassungen nach den Nutzerfotos der Mantikore-Ausgabe, Seiten 18–29. AU bezeichnet Ausdauer; im Aktionsblatt wird dafür AP verwendet.</p>
-    <nav aria-label="Inhaltsverzeichnis Spielregeln"><ol>${chapters.map(chapter => `<li><a href="#rules-${escape(chapter.id)}">${escape(chapter.title.replace(/^\d+\. /, ''))}</a></li>`).join('')}</ol></nav>
-    <p class="rules-notice"><strong>Referenzdaten noch ausstehend:</strong> Die vollständige Kampfresultat-Tabelle und die Zufallszahlentabelle fehlen. Es werden keine automatischen Kampfresultate berechnet.</p>
-    ${chapters.map(chapter => `<section aria-labelledby="rules-${escape(chapter.id)}"><h3 id="rules-${escape(chapter.id)}" tabindex="-1">${escape(chapter.title)}</h3>${renderMarkdown(chapter.markdown)}<a href="#rules-title">Zum Inhaltsverzeichnis</a></section>`).join('')}
+    <nav aria-label="Inhaltsverzeichnis Spielregeln"><ol>${chapters.map(chapter => `<li><a href="#rules-${escape(chapter.id)}">${escape(chapter.title.replace(/^\d+\. /, ''))}</a></li>`).join('')}<li><a href="#rules-kampfresultate">Kampfresultat-Tabelle</a></li><li><a href="#rules-zufallszahlen">Zufallszahlen-Tabelle</a></li></ol></nav>
+    <p>Direkt nachschlagen: <a href="#rules-kampfresultate">Kampfresultate</a> · <a href="#rules-zufallszahlen">Zufallszahlen</a>. Die Tabellen verändern deinen Spielstand nicht.</p>
+    ${chapters.map(chapter => `<section aria-labelledby="rules-${escape(chapter.id)}"><h3 id="rules-${escape(chapter.id)}" tabindex="-1">${escape(chapter.title)}</h3>${renderMarkdown(chapter.markdown)}${chapter.id === 'kampf' || chapter.id === 'startwerte' ? '<p><a href="#rules-kampfresultate">Kampfresultat-Tabelle öffnen</a> · <a href="#rules-zufallszahlen">Zufallszahlen-Tabelle öffnen</a></p>' : ''}<a href="#rules-title">Zum Inhaltsverzeichnis</a></section>`).join('')}
+    ${tablesHTML}
   </section>`;
 }
 
 export function isRulesHash(hash: string): boolean {
-  return hash === '#rules-title' || /^#rules-(startwerte|disziplinen|inventar|kampf|flucht|kai-rang)$/.test(hash) || hash === '#heilung' || hash === '#waffenkunde';
+  return hash === '#rules-title' || /^#rules-(startwerte|disziplinen|inventar|kampf|flucht|kai-rang|kampfresultate|zufallszahlen)$/.test(hash) || hash === '#heilung' || hash === '#waffenkunde';
 }
 
 const ranks = ['Novize', 'Intuite', 'Doan', 'Akolyth', 'Initiand', 'Aspirant', 'Hüter', 'Wanderer', 'Wissender', 'Meister'];
