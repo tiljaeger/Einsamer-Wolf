@@ -1,3 +1,4 @@
+import { mountCombatLog } from './combat-log';
 import { mountCombat, renderCombat } from './combat';
 import './combat.css';
 import { referenceTables } from './tables-data';
@@ -87,6 +88,8 @@ try { data = loadData(); setStatus('Deine Einträge werden auf diesem Gerät ges
 catch { storageReadable = false; setStatus('Die gespeicherten Daten konnten nicht gelesen werden. Sie wurden nicht überschrieben.'); }
 const map = mountMap(root.querySelector<HTMLElement>('#spielkarte')!, () => data.karte, karte => { data.karte = karte; persist(); }, setStatus);
 syncFields();
+const combatLog = mountCombatLog(root.querySelector<HTMLElement>('#kampfprotokoll')!, referenceTables, () => data.kampfprotokoll, () => { persist(); });
+combatLog.render();
 const combat = mountCombat(root.querySelector<HTMLElement>('#kampfhelfer')!, referenceTables, () => data.kampfprotokoll, value => {
   if (!storageReadable || hasInvalid()) return false;
   try {
@@ -141,8 +144,8 @@ root.addEventListener('click', event => {
   if (!button) return;
   if (button.dataset.tab) { activate(button.dataset.tab); if (button.dataset.tab === 'kampfhelfer') combat.open(); if (location.hash) history.replaceState(null, '', location.pathname + location.search); return; }
   if (button.dataset.action === 'reset') {
-    if (!window.confirm('Alle Charakterbogen-Eingaben und Kartendaten löschen?')) return;
-    data = createEmptyData(); storageReadable = true; syncFields(); map.render(); persist('Alle Eingaben wurden zurückgesetzt.');
+    if (!window.confirm('Alle Charakterbogen-Eingaben, Kämpfe und Kartendaten löschen?')) return;
+    data = createEmptyData(); storageReadable = true; syncFields(); map.render(); combatLog.render(); persist('Alle Eingaben wurden zurückgesetzt.');
   } else if (button.dataset.action === 'save') {
     if (hasInvalid()) { setStatus('Bitte korrigiere die ungültigen Eingaben vor dem Speichern.'); return; }
     persist('Alle Eingaben wurden gespeichert.');
@@ -164,7 +167,7 @@ upload.addEventListener('change', async () => {
     if (file.size > 2_000_000) throw new Error('Die Datei ist zu groß (maximal 2 MB).');
     const imported = importJSON(await file.text());
     saveData(imported);
-    data = imported; storageReadable = true; syncFields(); map.render(); setStatus('Charakterbogen importiert und gespeichert.');
+    data = imported; storageReadable = true; syncFields(); map.render(); combatLog.render(); setStatus('Charakterbogen importiert und gespeichert.');
   } catch (error) { setStatus(`Import nicht möglich: ${error instanceof Error ? error.message : 'unbekannter Fehler'}`); }
   finally { upload.value = ''; }
 });

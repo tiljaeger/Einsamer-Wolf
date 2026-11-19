@@ -36,3 +36,49 @@
 @media print {
   .sheet-panel.combat-helper { display: none !important; }
 }
+
+.combat-log {
+  display: grid;
+  gap: 1rem;
+}
+.combat-log-new { margin-block: 0.75rem; }
+.combat-log-fight { padding: clamp(0.6rem, 2vw, 1rem); }
+.combat-log-fight h3 { margin-block: 0 0.75rem; }
+.combat-log-values {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr) minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(0.3rem, 2vw, 0.8rem);
+}
+.combat-log fieldset {
+  min-inline-size: 0;
+  margin-inline: 0;
+  border: 1px solid currentColor;
+  padding: clamp(0.3rem, 1.5vw, 0.65rem);
+}
+.combat-log label {
+  display: block;
+  min-width: 0;
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+.combat-log-values fieldset label + label { margin-top: 0.45rem; }
+.combat-log input {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  padding: 0.3rem;
+  font: inherit;
+}
+.combat-log-round {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 7rem), 1fr));
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  break-inside: avoid;
+}
+.combat-log [role="status"] { font-weight: 700; }
+
+@media print {
+  .combat-log-new, .combat-log button { display: none; }
+}

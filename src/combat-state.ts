@@ -1,4 +1,4 @@
-import type { CombatEffect, CombatResult, ReferenceTables } from './table-model.ts';
+import type { CombatResult, ReferenceTables } from './table-model.ts';
 
 export interface Endurance { wolf: number; enemy: number }
 export interface Strength {
@@ -50,8 +50,8 @@ export function outcome(fight: Fight): 'active' | 'victory' | 'defeat' | 'both' 
   return fight.stopped ? 'stopped' : 'active';
 }
 
-function remaining(value: number, effect: CombatEffect): number {
-  return effect.death ? 0 : Math.max(0, value - effect.loss);
+export function remaining(value: number, loss: number | null): number {
+  return loss === null ? 0 : Math.max(0, value - loss);
 }
 
 export function previewRound(fight: Fight, quotient: number, random: number, tables: ReferenceTables): Round {
@@ -60,7 +60,7 @@ export function previewRound(fight: Fight, quotient: number, random: number, tab
   const result = tables.getCombatResult(quotient, random);
   return {
     quotient, random, result, before,
-    after: { wolf: remaining(before.wolf, result.loneWolf), enemy: remaining(before.enemy, result.enemy) },
+    after: { wolf: remaining(before.wolf, result.loneWolf.loss), enemy: remaining(before.enemy, result.enemy.loss) },
   };
 }
 
