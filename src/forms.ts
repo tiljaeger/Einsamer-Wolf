@@ -58,6 +58,8 @@ export function renderForms(): string {
       <section class="sheet-box sheet-stat sheet-endurance"><h3 class="sheet-heading">AUSDAUERPUNKTE</h3><div class="sheet-endurance-fields"><label>Grundwert ${numberField('kampfprotokoll.ausdauerGrundwert', 'Ausdauer Grundwert', 'min="0"')}</label><label>Aktuell ${numberField('kampfprotokoll.ausdauerAktuell', 'Aktuelle Ausdauerpunkte', 'min="0"')}</label></div><div class="sheet-notes"><p>kann nie über den Grundwert steigen.</p><p>0 = Tot</p></div></section>
     </div>
     <h2 class="sheet-title" id="kampfprotokoll-title">KAMPFPROTOKOLL</h2><a class="rule-link" href="#rules-kampf">Kampfregeln</a><a class="rule-link" href="#kampfhelfer">Kampfhelfer öffnen</a>
+    <button class="combat-log-new" type="button" data-new-fight>Neuer Kampf</button>
+    <div class="combat-log" data-fights></div>
     <div class="sheet-combat-headings" aria-hidden="true"><span>AUSDAUERPUNKTE</span><span></span><span>AUSDAUERPUNKTE</span></div>
     <div class="sheet-rounds sheet-box">${combatRows()}</div>
     <div class="sheet-ornament" aria-hidden="true">✦</div>

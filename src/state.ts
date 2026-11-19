@@ -1,3 +1,4 @@
+import { parseLoggedFights, type LoggedFight } from './combat-log-state.ts';
 import { emptyMap, parseMap, type MapData } from './map-state.ts';
 /** Versioned, browser-local data for the two sheets. Empty numeric fields remain empty. */
 export type NumericValue = number | '';
@@ -23,6 +24,7 @@ export interface CharacterData {
     ausdauerGrundwert: NumericValue;
     ausdauerAktuell: NumericValue;
     kampfrunden: CombatRound[];
+    kaempfe: LoggedFight[];
   };
 }
 
@@ -39,6 +41,7 @@ export function createEmptyData(): CharacterData {
     },
     kampfprotokoll: {
       kampfstaerke: '', ausdauerGrundwert: '', ausdauerAktuell: '',
+      kaempfe: [],
       kampfrunden: Array.from({ length: 7 }, () => ({ einsamerWolfAP: '', kampfquotient: '', feindAP: '' })),
     },
   };
@@ -105,6 +108,7 @@ export function parseCharacterData(value: unknown): CharacterData {
     kampfprotokoll: {
       kampfstaerke: numberValue(k.kampfstaerke, 'Kampfstärke'),
       ausdauerGrundwert: grundwert, ausdauerAktuell: aktuell, kampfrunden,
+      kaempfe: parseLoggedFights(k.kaempfe),
     },
   };
 }
