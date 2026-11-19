@@ -46,7 +46,7 @@ npm run build:worker
 ## CI und Cloudflare-Deployment
 
 - `.github/workflows/ci.yml` startet bei Pull Requests und Pushes auf `main`. Auf Ubuntu werden Node aus `.nvmrc`, `npm ci`, Tests, Typprüfung, Lint und Worker-Dry-Run ausgeführt.
-- `.github/workflows/deploy.yml` heißt **Deploy to Cloudflare** und wird ausschließlich manuell über `workflow_dispatch` gestartet. Er führt dieselben Prüfungen aus und ruft anschließend `npm run deploy` auf. Ein Push oder ein erfolgreicher CI-Lauf veröffentlicht nicht automatisch.
+- `.github/workflows/deploy.yml` heißt **Deploy to Cloudflare**. Nach denselben Prüfungen erstellt er für Pull Requests aus diesem Repository eine Cloudflare-Vorschau und veröffentlicht Pushes auf `main` automatisch in Produktion. Pull Requests aus Forks erhalten aus Sicherheitsgründen kein Deployment. Ein manueller Produktionsstart ist auf `main` möglich. Die PWA einschließlich Service Worker wird zusammen mit dem Worker bereitgestellt.
 - Der Deploy-Workflow verwendet die GitHub-Actions-Secrets `CLOUDFLARE_API_TOKEN` und `CLOUDFLARE_ACCOUNT_ID`. Zugangsdaten nicht ausgeben, in Dateien schreiben oder einchecken. Keine Annahmen treffen, dass Secrets vorhanden oder gültig sind.
 - `wrangler.jsonc` konfiguriert den Worker `einsamer-wolf`, den Einstieg `worker/index.ts`, den Build nach `dist/` und das Asset-Binding `ASSETS`. Das Deploy-Kommando veröffentlicht den Worker und die statischen Assets.
 - Ein Deployment ist eine Veröffentlichung: nur im Rahmen des jeweiligen Auftrags auslösen. Danach den Workflow-Status und die ausgegebene URL prüfen und das Ergebnis samt eventuell fehlgeschlagener Schritte berichten. Einen Dry-Run nicht als Veröffentlichung darstellen.

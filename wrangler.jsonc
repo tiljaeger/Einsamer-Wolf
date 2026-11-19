@@ -4,6 +4,7 @@
   "main": "worker/index.ts",
   "compatibility_date": "2026-10-23",
   "workers_dev": true,
+  "previews": {},
   "build": { "command": "npm run build", "watch_dir": "src" },
   "assets": {
     "directory": "./dist",
