@@ -27,7 +27,7 @@ function combatRows(): string {
 export function renderForms(): string {
   return `<section class="sheet-panel" id="aktionsblatt" aria-labelledby="aktionsblatt-title">
   <article class="sheet-page sheet-action">
-    <h2 class="sheet-title" id="aktionsblatt-title">AKTIONSBLATT</h2><a class="rule-link" href="#rules-startwerte">Regeln zu Startwerten</a>
+    <h2 class="sheet-title" id="aktionsblatt-title">AKTIONSBLATT</h2><a class="rule-link" href="#rules-startwerte">Regeln zu Startwerten</a><a class="rule-link" href="#kampfhelfer">Kampfhelfer öffnen</a>
     <section class="sheet-section sheet-disciplines" aria-labelledby="discipline-heading">
       <h3 class="sheet-heading" id="discipline-heading">KAI DISZIPLINEN</h3>
       <p class="kai-rank" aria-live="polite"></p><a class="rule-link" href="#rules-disziplinen">Kai-Disziplinen und Heilung nachlesen</a><a class="rule-link" href="#rules-kai-rang">Kai-Ränge nachlesen</a><div class="sheet-rows sheet-box">${numberedRows('aktionsblatt.kaiDisziplinen', 'Kai-Disziplin', 5)}</div>
@@ -57,7 +57,7 @@ export function renderForms(): string {
       <section class="sheet-box sheet-stat"><h3 class="sheet-heading">KAMPFSTÄRKE</h3>${numberField('kampfprotokoll.kampfstaerke', 'Kampfstärke')}</section>
       <section class="sheet-box sheet-stat sheet-endurance"><h3 class="sheet-heading">AUSDAUERPUNKTE</h3><div class="sheet-endurance-fields"><label>Grundwert ${numberField('kampfprotokoll.ausdauerGrundwert', 'Ausdauer Grundwert', 'min="0"')}</label><label>Aktuell ${numberField('kampfprotokoll.ausdauerAktuell', 'Aktuelle Ausdauerpunkte', 'min="0"')}</label></div><div class="sheet-notes"><p>kann nie über den Grundwert steigen.</p><p>0 = Tot</p></div></section>
     </div>
-    <h2 class="sheet-title" id="kampfprotokoll-title">KAMPFPROTOKOLL</h2><a class="rule-link" href="#rules-kampf">Kampfregeln und fehlende Referenztabellen</a>
+    <h2 class="sheet-title" id="kampfprotokoll-title">KAMPFPROTOKOLL</h2><a class="rule-link" href="#rules-kampf">Kampfregeln</a><a class="rule-link" href="#kampfhelfer">Kampfhelfer öffnen</a>
     <div class="sheet-combat-headings" aria-hidden="true"><span>AUSDAUERPUNKTE</span><span></span><span>AUSDAUERPUNKTE</span></div>
     <div class="sheet-rounds sheet-box">${combatRows()}</div>
     <div class="sheet-ornament" aria-hidden="true">✦</div>
