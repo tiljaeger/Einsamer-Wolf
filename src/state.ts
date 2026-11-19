@@ -1,4 +1,4 @@
-import { parseLoggedFights, type LoggedFight } from './combat-log-state.ts';
+import { changeStrength, parseLoggedFights, type LoggedFight } from './combat-log-state.ts';
 import { emptyMap, parseMap, type MapData } from './map-state.ts';
 /** Versioned, browser-local data for the two sheets. Empty numeric fields remain empty. */
 export type NumericValue = number | '';
@@ -26,6 +26,16 @@ export interface CharacterData {
     kampfrunden: CombatRound[];
     kaempfe: LoggedFight[];
   };
+}
+
+/** The latest fight uses the character's live stats. Older fights keep their recorded values. */
+export function readLoggedFight(sheet: CharacterData['kampfprotokoll'], index: number): LoggedFight {
+  const fight = sheet.kaempfe[index];
+  if (index !== sheet.kaempfe.length - 1) return fight;
+  const current = { ...fight.current, wolf: sheet.ausdauerAktuell === '' ? fight.current.wolf : sheet.ausdauerAktuell };
+  const live = { ...fight, current };
+  if (sheet.kampfstaerke !== '') changeStrength(live, 'wolf', sheet.kampfstaerke);
+  return live;
 }
 
 export const STORAGE_KEY = 'einsamer-wolf-charakterbogen-v1';
@@ -95,7 +105,7 @@ export function parseCharacterData(value: unknown): CharacterData {
       feindAP: numberValue(round.feindAP, `Ausdauer Feind, Kampfzeile ${index + 1}`, 0),
     };
   });
-  return {
+  const parsed: CharacterData = {
     karte: parseMap(data.karte),
     aktionsblatt: {
       kaiDisziplinen: textArray(a.kaiDisziplinen, 5, 'Kai-Disziplinen'),
@@ -111,6 +121,17 @@ export function parseCharacterData(value: unknown): CharacterData {
       kaempfe: parseLoggedFights(k.kaempfe),
     },
   };
+  const sheet = parsed.kampfprotokoll;
+  const latest = sheet.kaempfe.at(-1);
+  if (latest) {
+    // Legacy fight entries can supply a value when the character field was left blank.
+    if (sheet.kampfstaerke === '') sheet.kampfstaerke = latest.strength.wolf;
+    if (sheet.ausdauerAktuell === '') {
+      sheet.ausdauerAktuell = grundwert === '' ? latest.current.wolf : Math.min(grundwert, latest.current.wolf);
+    }
+    sheet.kaempfe[sheet.kaempfe.length - 1] = readLoggedFight(sheet, sheet.kaempfe.length - 1);
+  }
+  return parsed;
 }
 
 export function importJSON(raw: string): CharacterData {

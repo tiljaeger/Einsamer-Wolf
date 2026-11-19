@@ -16,13 +16,20 @@
 .sheet-app button, .sheet-app .sheet-control {
   min-height: 2.75rem;
   border: 1px solid #a99b7e;
-  border-radius: 2px;
+  border-radius: 4px;
   padding: .65rem 1rem;
   color: #f5eddb;
-  background: transparent;
+  background: #40584c;
   cursor: pointer;
 }
-.sheet-app button:hover, .sheet-app .sheet-control:hover { background: #46594e; }
+.sheet-app button:enabled:hover, .sheet-app .sheet-control:hover { background: #4d6759; }
+.sheet-app button:enabled:active { background: #304339; }
+.sheet-app button:disabled {
+  background: #ded7c7;
+  color: #564f42;
+  border-color: #807765;
+  cursor: default;
+}
 .sheet-app button:focus-visible, .sheet-app a:focus-visible,
 .sheet-app input:focus-visible, .sheet-app textarea:focus-visible {
   outline: 3px solid #d3a94f;
@@ -33,7 +40,7 @@
 .sheet-tabs { padding-bottom: 1rem; border-bottom: 1px solid #66786b; }
 .sheet-tabs button { flex: 1 1 13rem; font-weight: 700; letter-spacing: .04em; }
 .sheet-tabs button[aria-selected="true"], .sheet-tabs button[aria-pressed="true"],
-.sheet-tabs button.is-active { background: #e7dbba; color: #29251d; border-color: #e7dbba; }
+.sheet-tabs button.is-active, .sheet-app .sheet-tabs button[aria-pressed="true"]:hover { background: #e7dbba; color: #29251d; border-color: #e7dbba; }
 .sheet-actions { margin-top: 1rem; }
 .sheet-actions button, .sheet-actions .sheet-control { font-size: .84rem; }
 .sheet-status { min-height: 1.3em; margin: .75rem 0 0; color: #f0e5c9; font-size: .85rem; }

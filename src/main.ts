@@ -88,7 +88,20 @@ try { data = loadData(); setStatus('Deine Einträge werden auf diesem Gerät ges
 catch { storageReadable = false; setStatus('Die gespeicherten Daten konnten nicht gelesen werden. Sie wurden nicht überschrieben.'); }
 const map = mountMap(root.querySelector<HTMLElement>('#spielkarte')!, () => data.karte, karte => { data.karte = karte; persist(); }, setStatus);
 syncFields();
-const combatLog = mountCombatLog(root.querySelector<HTMLElement>('#kampfprotokoll')!, referenceTables, () => data.kampfprotokoll, () => { persist(); });
+const combatLog = mountCombatLog(root.querySelector<HTMLElement>('#kampfprotokoll')!, referenceTables, () => data.kampfprotokoll, sheet => {
+  const previous = data.kampfprotokoll;
+  data = parseCharacterData({ ...data, kampfprotokoll: sheet });
+  for (const field of fields) {
+    const path = field.dataset.path!;
+    if ((path === 'kampfprotokoll.ausdauerAktuell' || path === 'kampfprotokoll.kampfstaerke') &&
+        getPath({ ...data, kampfprotokoll: previous }, path) !== getPath(data, path)) {
+      field.value = String(getPath(data, path));
+      field.setCustomValidity('');
+      mirror(field);
+    }
+  }
+  persist();
+});
 combatLog.render();
 const combat = mountCombat(root.querySelector<HTMLElement>('#kampfhelfer')!, referenceTables, () => data.kampfprotokoll, value => {
   if (!storageReadable || hasInvalid()) return false;
@@ -99,6 +112,7 @@ const combat = mountCombat(root.querySelector<HTMLElement>('#kampfhelfer')!, ref
     saveData(candidate);
     data = candidate;
     syncFields();
+    combatLog.syncLatest();
     return true;
   } catch { return false; }
 });
@@ -128,7 +142,14 @@ for (const field of fields) field.addEventListener('input', () => {
   }
   try {
     data = parseCharacterData(candidate);
+    for (const item of affected) {
+      const value = String(getPath(data, item.dataset.path!));
+      if (item.value === value) continue;
+      item.value = value;
+      mirror(item);
+    }
     updateRank();
+    combatLog.syncLatest();
     persist(hasInvalid() ? 'Gespeichert. Bitte prüfe noch ungültige Eingaben.' : undefined);
   } catch (error) {
     const invalid = endurance ? affected.find(item => item.dataset.path === 'kampfprotokoll.ausdauerAktuell')! : field;
