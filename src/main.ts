@@ -1,3 +1,5 @@
+import { mountCombat, renderCombat } from './combat';
+import './combat.css';
 import { referenceTables } from './tables-data';
 import { renderTables, mountTables } from './tables';
 import chapters from './rules-data.json';
@@ -19,6 +21,7 @@ root.innerHTML = `
     <div class="sheet-tabs" aria-label="Formularseite auswählen">
       <button type="button" data-tab="aktionsblatt" aria-pressed="true">Aktionsblatt</button>
       <button type="button" data-tab="kampfprotokoll" aria-pressed="false">Kampfprotokoll</button>
+      <button type="button" data-tab="kampfhelfer" aria-pressed="false">Kampfhelfer</button>
       <button type="button" data-tab="spielregeln" aria-pressed="false">Spielregeln</button>
       <button type="button" data-tab="spielkarte" aria-pressed="false">Spielkarte</button>
     </div>
@@ -32,7 +35,7 @@ root.innerHTML = `
     </div>
     <p class="sheet-status" role="status" aria-live="polite"></p>
   </div>
-  <div class="sheet-pages">${renderForms()}<section class="sheet-panel" id="spielkarte" aria-label="Spielkarte"></section>${renderRules(chapters, renderTables(referenceTables))}</div>`;
+  <div class="sheet-pages">${renderForms()}${renderCombat(referenceTables)}<section class="sheet-panel" id="spielkarte" aria-label="Spielkarte"></section>${renderRules(chapters, renderTables(referenceTables))}</div>`;
 
 mountTables(root.querySelector<HTMLElement>('#spielregeln')!, referenceTables);
 
@@ -84,16 +87,30 @@ try { data = loadData(); setStatus('Deine Einträge werden auf diesem Gerät ges
 catch { storageReadable = false; setStatus('Die gespeicherten Daten konnten nicht gelesen werden. Sie wurden nicht überschrieben.'); }
 const map = mountMap(root.querySelector<HTMLElement>('#spielkarte')!, () => data.karte, karte => { data.karte = karte; persist(); }, setStatus);
 syncFields();
-function followRulesHash(): void {
-  if (!isRulesHash(location.hash)) return;
-  activate('spielregeln');
-  const target = document.getElementById(location.hash.slice(1));
+const combat = mountCombat(root.querySelector<HTMLElement>('#kampfhelfer')!, referenceTables, () => data.kampfprotokoll, value => {
+  if (!storageReadable || hasInvalid()) return false;
+  try {
+    const candidate = parseCharacterData({
+      ...data, kampfprotokoll: { ...data.kampfprotokoll, ausdauerAktuell: value },
+    });
+    saveData(candidate);
+    data = candidate;
+    syncFields();
+    return true;
+  } catch { return false; }
+});
+function followPanelHash(): void {
+  const isCombat = location.hash === '#kampfhelfer';
+  if (!isCombat && !isRulesHash(location.hash)) return;
+  activate(isCombat ? 'kampfhelfer' : 'spielregeln');
+  if (isCombat) combat.open();
+  const target = document.getElementById(isCombat ? 'combat-title' : location.hash.slice(1));
   target?.focus({ preventScroll: true });
   target?.scrollIntoView();
 }
-window.addEventListener('hashchange', followRulesHash);
+window.addEventListener('hashchange', followPanelHash);
 activate('aktionsblatt');
-followRulesHash();
+followPanelHash();
 
 for (const field of fields) field.addEventListener('input', () => {
   const path = field.dataset.path!;
@@ -119,10 +136,10 @@ for (const field of fields) field.addEventListener('input', () => {
 
 root.addEventListener('click', event => {
   const link = (event.target as HTMLElement).closest<HTMLAnchorElement>('a');
-  if (link && isRulesHash(link.hash) && link.hash === location.hash) followRulesHash();
+  if (link && (isRulesHash(link.hash) || link.hash === '#kampfhelfer') && link.hash === location.hash) followPanelHash();
   const button = (event.target as HTMLElement).closest<HTMLButtonElement>('button');
   if (!button) return;
-  if (button.dataset.tab) { activate(button.dataset.tab); if (location.hash) history.replaceState(null, '', location.pathname + location.search); return; }
+  if (button.dataset.tab) { activate(button.dataset.tab); if (button.dataset.tab === 'kampfhelfer') combat.open(); if (location.hash) history.replaceState(null, '', location.pathname + location.search); return; }
   if (button.dataset.action === 'reset') {
     if (!window.confirm('Alle Charakterbogen-Eingaben und Kartendaten löschen?')) return;
     data = createEmptyData(); storageReadable = true; syncFields(); map.render(); persist('Alle Eingaben wurden zurückgesetzt.');

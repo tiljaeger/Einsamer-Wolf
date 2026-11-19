@@ -1,0 +1,38 @@
+.combat-helper form,
+.combat-helper fieldset {
+  display: grid;
+  gap: 0.75rem;
+}
+.combat-sides {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+  gap: 0.75rem;
+}
+.combat-helper fieldset {
+  min-inline-size: 0;
+  margin: 0;
+  border: 1px solid currentColor;
+  border-radius: 0.45rem;
+  padding: 0.75rem;
+}
+.combat-helper legend { font-weight: 700; }
+.combat-helper label { display: block; }
+.combat-helper input:not([type="checkbox"]),
+.combat-helper select {
+  display: block;
+  width: 100%;
+  max-width: 24rem;
+  padding: 0.45rem;
+  font: inherit;
+}
+.combat-helper button { font: inherit; }
+.combat-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.combat-helper details { margin-top: 0.75rem; }
+.combat-helper [hidden] { display: none; }
+@media print {
+  .sheet-panel.combat-helper { display: none !important; }
+}

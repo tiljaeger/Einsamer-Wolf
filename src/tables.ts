@@ -2,6 +2,11 @@ import { quotientColumn, quotientRanges, type CombatEffect, type RandomSelection
 
 const display = (effect: CombatEffect): string => effect.death ? 'T' : effect.original.replace('-', '−');
 const explanation = (effect: CombatEffect): string => effect.death ? 'Tod (T)' : `${effect.loss} Ausdauerpunkte Verlust`;
+export function renderRandomGrid(tables: ReferenceTables): string {
+  return `<div class="rules-table random-scroll" tabindex="0" role="region" aria-label="Zufallszahlenraster, horizontal scrollbar">
+      <table class="random-table"><caption>Zufallszahlen in Originalreihenfolge</caption><tbody>${tables.random.map((row, r) => `<tr>${row.map((n, c) => `<td><button type="button" data-random-row="${r}" data-random-column="${c}" aria-label="Zeile ${r + 1}, Spalte ${c + 1}: ${n}" aria-pressed="false">${n}</button></td>`).join('')}</tr>`).join('')}</tbody></table>
+    </div>`;
+}
 export function renderTables(tables: ReferenceTables): string {
   return `<section aria-labelledby="rules-kampfresultate">
     <h3 id="rules-kampfresultate" tabindex="-1">Kampfresultat-Tabelle</h3>
@@ -24,9 +29,7 @@ export function renderTables(tables: ReferenceTables): string {
   <section aria-labelledby="rules-zufallszahlen">
     <h3 id="rules-zufallszahlen" tabindex="-1">Zufallszahlen-Tabelle</h3>
     <p>Das Originalraster enthält zehn Zeilen und zehn Spalten. Tippe ein Feld an, um dessen Ziffer auszuwählen und oben nachzuschlagen. Auch dasselbe Feld kann erneut gewählt werden.</p>
-    <div class="rules-table random-scroll" tabindex="0" role="region" aria-label="Zufallszahlenraster, horizontal scrollbar">
-      <table class="random-table"><caption>Zufallszahlen in Originalreihenfolge</caption><tbody>${tables.random.map((row, r) => `<tr>${row.map((n, c) => `<td><button type="button" data-random-row="${r}" data-random-column="${c}" aria-label="Zeile ${r + 1}, Spalte ${c + 1}: ${n}" aria-pressed="false">${n}</button></td>`).join('')}</tr>`).join('')}</tbody></table>
-    </div>
+    ${renderRandomGrid(tables)}
     <p class="random-selection rules-notice" role="status" aria-live="polite" aria-atomic="true">Noch kein Feld ausgewählt.</p>
     <a href="#rules-kampfresultate">Zum Kampfergebnis</a> · <a href="#rules-title">Zum Inhaltsverzeichnis</a>
   </section>`;
