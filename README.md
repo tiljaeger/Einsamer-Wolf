@@ -65,7 +65,7 @@ Alternativ `CLOUDFLARE_API_TOKEN` und `CLOUDFLARE_ACCOUNT_ID` sicher in der Ausf
 
 Wrangler veröffentlicht den Worker `einsamer-wolf` und gibt dessen tatsächliche `workers.dev`-URL aus. Die Adresse lässt sich vor einem erfolgreichen Deployment nicht verlässlich bestimmen.
 
-Der GitHub-Workflow **Deploy to Cloudflare** lässt sich manuell starten. Dafür unter Settings → Secrets and variables → Actions die Repository-Secrets `CLOUDFLARE_API_TOKEN` und `CLOUDFLARE_ACCOUNT_ID` hinterlegen. Der Workflow prüft und baut die Webseite, veröffentlicht sie und schreibt die Deployment-URL in das Job-Protokoll.
+Der GitHub-Workflow **Deploy to Cloudflare** erstellt nach erfolgreichen Prüfungen für Pull Requests aus diesem Repository eine Cloudflare-Vorschau und veröffentlicht Pushes auf `main` automatisch in Produktion. Für Pull Requests aus Forks läuft CI ohne Deployment, da Repository-Secrets dort nicht bereitstehen. Der Workflow kann auf `main` auch manuell gestartet werden. Unter Settings → Secrets and variables → Actions müssen `CLOUDFLARE_API_TOKEN` und `CLOUDFLARE_ACCOUNT_ID` hinterlegt sein; der Token benötigt die passenden Worker- und Preview-Berechtigungen. Die Vorschau- bzw. Deployment-URL steht im Job-Protokoll. Die PWA-Dateien einschließlich Service Worker werden mit dem Worker veröffentlicht; installierte Apps erhalten Updates beim nächsten Online-Öffnen oder Neuladen.
 
 ## Projektaufbau
 
@@ -74,7 +74,7 @@ Der GitHub-Workflow **Deploy to Cloudflare** lässt sich manuell starten. Dafür
 - `worker/index.ts`: Weiterleitung an Cloudflare Static Assets
 - `wrangler.jsonc`: Worker-Name und Asset-Konfiguration
 - `.github/workflows/ci.yml`: automatische Typprüfung, Linting und Worker-Build
-- `.github/workflows/deploy.yml`: manuelles Cloudflare-Deployment
+- `.github/workflows/deploy.yml`: Pull-Request-Vorschau und automatisches Cloudflare-Deployment von `main`
 
 Tastaturfokus, mobiles Layout, SVG-Bildbeschreibung und reduzierte Bewegung werden berücksichtigt. Die Illustrationen und Texte wurden für dieses Projekt erstellt. Ein lokaler Build allein veröffentlicht die Seite noch nicht.
 
