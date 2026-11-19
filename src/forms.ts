@@ -54,7 +54,7 @@ export function renderForms(): string {
 <section class="sheet-panel" id="kampfprotokoll" aria-labelledby="kampfprotokoll-title">
   <article class="sheet-page sheet-combat">
     <div class="sheet-stats">
-      <section class="sheet-box sheet-stat"><h3 class="sheet-heading">KAMPFSTÄRKE</h3>${numberField('kampfprotokoll.kampfstaerke', 'Kampfstärke')}</section>
+      <section class="sheet-box sheet-stat"><h3 class="sheet-heading">KAMPFSTÄRKE</h3>${numberField('kampfprotokoll.kampfstaerke', 'Kampfstärke')}<p class="sheet-notes">Ausrüstungs- und Abenteuerboni in die aktuelle Kampfstärke einrechnen.</p></section>
       <section class="sheet-box sheet-stat sheet-endurance"><h3 class="sheet-heading">AUSDAUERPUNKTE</h3><div class="sheet-endurance-fields"><label>Grundwert ${numberField('kampfprotokoll.ausdauerGrundwert', 'Ausdauer Grundwert', 'min="0"')}</label><label>Aktuell ${numberField('kampfprotokoll.ausdauerAktuell', 'Aktuelle Ausdauerpunkte', 'min="0"')}</label></div><div class="sheet-notes"><p>kann nie über den Grundwert steigen.</p><p>0 = Tot</p></div></section>
     </div>
     <h2 class="sheet-title" id="kampfprotokoll-title">KAMPFPROTOKOLL</h2><a class="rule-link" href="#rules-kampf">Kampfregeln</a><a class="rule-link" href="#kampfhelfer">Kampfhelfer öffnen</a>

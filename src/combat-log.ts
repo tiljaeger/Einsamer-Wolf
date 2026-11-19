@@ -1,5 +1,5 @@
 import { addLoggedRound, changeStrength, correctRound, logStatus, newLoggedFight, type LoggedFight, type LoggedRound } from './combat-log-state.ts';
-import type { CharacterData } from './state.ts';
+import { readLoggedFight, type CharacterData } from './state.ts';
 import type { ReferenceTables } from './table-model.ts';
 
 const sides = [['wolf', 'Einsamer Wolf'], ['enemy', 'Feind']] as const;
@@ -45,7 +45,7 @@ export function renderLoggedFight(fight: LoggedFight, index: number): string {
 }
 
 export function mountCombatLog(root: HTMLElement, tables: ReferenceTables, read: () => CharacterData['kampfprotokoll'],
-  save: () => void) {
+  save: (sheet: CharacterData['kampfprotokoll']) => void) {
   const list = root.querySelector<HTMLElement>('[data-fights]')!;
 
   function sync(card: HTMLElement, fight: LoggedFight): void {
@@ -80,7 +80,10 @@ export function mountCombatLog(root: HTMLElement, tables: ReferenceTables, read:
     if (!(input instanceof HTMLInputElement)) return;
     const card = input.closest<HTMLElement>('[data-fight]');
     if (!card) return;
-    const fight = read().kaempfe[Number(card.dataset.fight)];
+    const sheet = structuredClone(read());
+    const index = Number(card.dataset.fight);
+    const fight = readLoggedFight(sheet, index);
+    const before = { ap: fight.current.wolf, ks: fight.strength.wolf };
     const row = input.closest<HTMLElement>('[data-round]');
     const [name, side] = input.name.split('-') as [string, Side];
     const isLoss = name === 'loss';
@@ -102,36 +105,66 @@ export function mountCombatLog(root: HTMLElement, tables: ReferenceTables, read:
           fight.current[side] = value;
         } else fight.quotient = value;
       }
+      sheet.kaempfe[index] = fight;
+      if (index === sheet.kaempfe.length - 1) {
+        if (fight.current.wolf !== before.ap || (!row && name === 'current' && side === 'wolf')) {
+          sheet.ausdauerAktuell = fight.current.wolf;
+        }
+        if (fight.strength.wolf !== before.ks || (!row && name === 'strength' && side === 'wolf')) {
+          sheet.kampfstaerke = fight.strength.wolf;
+        }
+      }
+      save(sheet);
       showError(card, '');
-      save();
     } catch (error) {
       showError(card, error instanceof Error ? error.message : 'Die Korrektur ist ungültig.');
     }
-    sync(card, fight);
+    sync(card, readLoggedFight(read(), index));
   });
 
   root.addEventListener('click', event => {
     const button = (event.target as HTMLElement).closest<HTMLButtonElement>('button');
     if (button?.hasAttribute('data-new-fight')) {
-      const sheet = read();
+      const sheet = structuredClone(read());
+      const previous = sheet.kaempfe.length - 1;
+      if (previous >= 0) sheet.kaempfe[previous] = readLoggedFight(sheet, previous);
       const fight = newLoggedFight(sheet.ausdauerAktuell || 0, sheet.kampfstaerke || 0);
       sheet.kaempfe.push(fight);
-      list.insertAdjacentHTML('beforeend', renderLoggedFight(fight, sheet.kaempfe.length - 1));
+      save(sheet);
+      list.insertAdjacentHTML('beforeend', renderLoggedFight(fight, previous + 1));
       list.lastElementChild?.querySelector<HTMLInputElement>('[name="current-wolf"]')?.focus();
-      save();
     } else if (button?.hasAttribute('data-new-round')) {
       const card = button.closest<HTMLElement>('[data-fight]')!;
-      const fight = read().kaempfe[Number(card.dataset.fight)];
-      const index = fight.rounds.length;
+      const fightIndex = Number(card.dataset.fight);
+      const sheet = structuredClone(read());
+      const fight = readLoggedFight(sheet, fightIndex);
+      const roundIndex = fight.rounds.length;
       if (logStatus(fight)) return;
-      addLoggedRound(fight, tables);
-      card.querySelector('[data-fight-rounds]')!.insertAdjacentHTML('beforeend', renderRound(fight.rounds[index], index));
+      try {
+        addLoggedRound(fight, tables);
+        sheet.kaempfe[fightIndex] = fight;
+        if (fightIndex === sheet.kaempfe.length - 1) sheet.ausdauerAktuell = fight.current.wolf;
+        save(sheet);
+      } catch (error) {
+        showError(card, error instanceof Error ? error.message : 'Die Runde konnte nicht erfasst werden.');
+        return;
+      }
+      card.querySelector('[data-fight-rounds]')!.insertAdjacentHTML('beforeend', renderRound(fight.rounds[roundIndex], roundIndex));
       sync(card, fight);
       showError(card, '');
-      if (button.disabled) card.querySelector<HTMLInputElement>(`[data-round="${index}"] input`)?.focus();
-      save();
+      if (button.disabled) card.querySelector<HTMLInputElement>(`[data-round="${roundIndex}"] input`)?.focus();
     }
   });
 
-  return { render: () => { list.innerHTML = read().kaempfe.map(renderLoggedFight).join(''); } };
+  return {
+    render: () => {
+      const sheet = read();
+      list.innerHTML = sheet.kaempfe.map((_, index) => renderLoggedFight(readLoggedFight(sheet, index), index)).join('');
+    },
+    syncLatest: () => {
+      const sheet = read();
+      const card = list.lastElementChild as HTMLElement | null;
+      if (card) sync(card, readLoggedFight(sheet, sheet.kaempfe.length - 1));
+    },
+  };
 }

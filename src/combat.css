@@ -82,3 +82,21 @@
 @media print {
   .combat-log-new, .combat-log button { display: none; }
 }
+
+/* These panels have light surfaces in both system color schemes. */
+.sheet-app :is(.sheet-combat, .combat-helper) button:focus-visible {
+  outline: 3px solid #704219;
+  outline-offset: 3px;
+}
+.sheet-app :is([data-new-round], [data-combat="start"], [data-combat="confirm"]):enabled {
+  background: #75411e;
+  border-color: #75411e;
+  color: #fff7e6;
+  font-weight: 700;
+}
+.sheet-app :is([data-new-round], [data-combat="start"], [data-combat="confirm"]):enabled:hover {
+  background: #8a512a;
+}
+.sheet-app :is([data-new-round], [data-combat="start"], [data-combat="confirm"]):enabled:active {
+  background: #592e14;
+}

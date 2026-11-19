@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { addLoggedRound, changeStrength, correctRound, logStatus, newLoggedFight } from '../src/combat-log-state.ts';
 import { renderLoggedFight } from '../src/combat-log.ts';
 import { renderForms } from '../src/forms.ts';
-import { createEmptyData, exportJSON, importJSON, loadData, saveData } from '../src/state.ts';
+import { createEmptyData, exportJSON, importJSON, loadData, parseCharacterData, readLoggedFight, saveData } from '../src/state.ts';
 import { parseReferenceTables } from '../src/table-model.ts';
 
 const tables = parseReferenceTables(
@@ -81,18 +81,21 @@ test('old saves migrate and new fights survive JSON export and a storage reload'
   fight.current.enemy = 10;
   addLoggedRound(fight, tables, 8);
   data.kampfprotokoll.kaempfe.push(fight, newLoggedFight(15, 17));
+  const migrated = parseCharacterData(data);
+  assert.equal(migrated.kampfprotokoll.ausdauerAktuell, 15);
+  assert.equal(migrated.kampfprotokoll.kampfstaerke, 17);
 
   let saved = '';
   const storage = { getItem: () => saved, setItem: (_key: string, value: string) => { saved = value; } } as Storage;
   saveData(data, storage);
-  assert.deepEqual(loadData(storage), data);
-  assert.deepEqual(importJSON(exportJSON(data)), data);
+  assert.deepEqual(loadData(storage), migrated);
+  assert.deepEqual(importJSON(exportJSON(data)), migrated);
   assert.equal(loadData(storage).kampfprotokoll.kampfrunden[3].kampfquotient, -3);
 
   const invalid = structuredClone(data);
   invalid.kampfprotokoll.kaempfe[0].rounds[0].random = 10;
   assert.throws(() => saveData(invalid, storage));
-  assert.deepEqual(loadData(storage), data);
+  assert.deepEqual(loadData(storage), migrated);
 });
 
 test('combat log renders editable labelled values and exposes the finished state', () => {
@@ -107,4 +110,37 @@ test('combat log renders editable labelled values and exposes the finished state
   assert.match(html, /role="status">Kampf beendet/);
   assert.match(html, /Verlust Feind \(AP\/T\)<input[^>]+value="T"/);
   assert.match(html, /Zufallszahl<input[^>]+value="8"/);
+});
+
+test('the latest fight follows character stats and keeps historical rounds on reload', () => {
+  const data = createEmptyData();
+  const sheet = data.kampfprotokoll;
+  sheet.kampfstaerke = 17;
+  sheet.ausdauerGrundwert = 24;
+  sheet.ausdauerAktuell = 20;
+  const oldFight = newLoggedFight(12, 15);
+  const currentFight = newLoggedFight(20, 17);
+  currentFight.current.enemy = 20;
+  changeStrength(currentFight, 'enemy', 20);
+  sheet.kaempfe.push(oldFight, currentFight);
+
+  // Apply the effective strength after an equipment bonus.
+  sheet.kampfstaerke = 19;
+  const liveFight = readLoggedFight(sheet, 1);
+  assert.equal(liveFight.quotient, -1);
+  addLoggedRound(liveFight, tables, 6);
+  sheet.ausdauerAktuell = liveFight.current.wolf;
+  sheet.kaempfe[1] = liveFight;
+
+  const reloaded = importJSON(exportJSON(data)).kampfprotokoll;
+  assert.deepEqual(reloaded.kaempfe[0], oldFight);
+  assert.equal(reloaded.kaempfe[1].current.wolf, reloaded.ausdauerAktuell);
+  assert.equal(reloaded.kaempfe[1].strength.wolf, 19);
+
+  reloaded.ausdauerAktuell = 22;
+  reloaded.kampfstaerke = 17;
+  const corrected = readLoggedFight(reloaded, 1);
+  assert.equal(corrected.current.wolf, 22);
+  assert.equal(corrected.quotient, -3);
+  assert.equal(corrected.rounds[0].quotient, -1);
 });
