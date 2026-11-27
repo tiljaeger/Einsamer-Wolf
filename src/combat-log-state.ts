@@ -54,6 +54,10 @@ export function logStatus(fight: LoggedFight): string {
   }[outcome(startFight(current))];
 }
 
+export function isFinishedFight(fight: LoggedFight): boolean {
+  return fight.rounds.length > 0 && Boolean(logStatus(fight));
+}
+
 export function addLoggedRound(fight: LoggedFight, tables: ReferenceTables, random = Math.floor(Math.random() * 10)): void {
   if (logStatus(fight)) throw new Error('Für diesen Kampf ist keine weitere Runde möglich.');
   const { quotient, before, after, result } = previewRound(startFight(fight.current), fight.quotient, random, tables);

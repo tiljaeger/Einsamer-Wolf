@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { addLoggedRound, changeStrength, correctRound, logStatus, newLoggedFight } from '../src/combat-log-state.ts';
 import { renderLoggedFight } from '../src/combat-log.ts';
 import { renderForms } from '../src/forms.ts';
-import { createEmptyData, exportJSON, importJSON, loadData, parseCharacterData, readLoggedFight, saveData } from '../src/state.ts';
+import { clearCombatLog, createEmptyData, exportJSON, importJSON, loadData, parseCharacterData, readLoggedFight, saveData } from '../src/state.ts';
 import { parseReferenceTables } from '../src/table-model.ts';
 
 const tables = parseReferenceTables(
@@ -104,6 +104,34 @@ test('the start page combines character stats, combat log and action sheet', () 
   assert.match(html, /class="sheet-stats"[\s\S]+data-path="kampfprotokoll.kampfstaerke"[\s\S]+data-path="kampfprotokoll.ausdauerAktuell"[\s\S]+>Kampfprotokoll<\/h2>[\s\S]+data-new-fight>Neuer Kampf[\s\S]+data-fights[\s\S]+id="aktionsblatt"/);
 });
 
+test('the combat log offers a collapsed history and a dedicated delete action', () => {
+  const html = renderForms();
+  assert.match(html, /data-clear-fights>Alle Kämpfe löschen/);
+  assert.match(html, /data-fights><\/div>\s*<details class="sheet-fight-history">\s*<summary>Vergangene Kämpfe<\/summary>/);
+  assert.match(html, /data-past-fights><\/div>\s*<details class="sheet-legacy">/);
+});
+
+test('clearing all fights and manual entries survives a JSON round trip and retains character data', () => {
+  const data = createEmptyData();
+  data.aktionsblatt.waffen[0] = 'Schwert';
+  data.karte.location = { x: 100, y: 200 };
+  const sheet = data.kampfprotokoll;
+  sheet.kampfstaerke = 17;
+  sheet.ausdauerGrundwert = 25;
+  sheet.ausdauerAktuell = 19;
+  sheet.kaempfe = [newLoggedFight(25, 17), newLoggedFight(19, 17)];
+  sheet.kampfrunden[0].kampfquotient = 0;
+
+  const cleared = importJSON(exportJSON({ ...data, kampfprotokoll: clearCombatLog(sheet) }));
+  assert.deepEqual(cleared.kampfprotokoll, {
+    ...createEmptyData().kampfprotokoll, kampfstaerke: 17, ausdauerGrundwert: 25, ausdauerAktuell: 19,
+  });
+  assert.deepEqual(cleared.aktionsblatt, data.aktionsblatt);
+  assert.deepEqual(cleared.karte, data.karte);
+  assert.equal(sheet.kaempfe.length, 2);
+  assert.equal(sheet.kampfrunden[0].kampfquotient, 0);
+});
+
 test('combat log renders editable labelled values and exposes the finished state', () => {
   const fight = newLoggedFight(20, 20);
   fight.current.enemy = 15;
@@ -148,4 +176,23 @@ test('the latest fight follows character stats and keeps historical rounds on re
   assert.equal(corrected.current.wolf, 22);
   assert.equal(corrected.quotient, -3);
   assert.equal(corrected.rounds[0].quotient, -1);
+});
+
+
+test('new character stats do not reopen the last completed fight on reload', () => {
+  const data = createEmptyData();
+  const sheet = data.kampfprotokoll;
+  const fight = newLoggedFight(1, 17);
+  fight.current.enemy = 30;
+  changeStrength(fight, 'enemy', 20);
+  addLoggedRound(fight, tables, 6);
+  assert.equal(fight.current.wolf, 0);
+  sheet.kaempfe.push(fight);
+  sheet.ausdauerAktuell = 20;
+  sheet.kampfstaerke = 19;
+
+  const reloaded = importJSON(exportJSON(data)).kampfprotokoll;
+  assert.deepEqual(readLoggedFight(reloaded, 0), fight);
+  assert.equal(reloaded.ausdauerAktuell, 20);
+  assert.equal(reloaded.kampfstaerke, 19);
 });

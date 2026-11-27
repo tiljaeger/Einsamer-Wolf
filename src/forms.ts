@@ -33,10 +33,17 @@ export function renderForms(): string {
     </div>
     <h2 class="sheet-title" id="kampfprotokoll-title">Kampfprotokoll</h2><a class="rule-link" href="#rules-kampf">Kampfregeln</a><a class="rule-link" href="#kampfhelfer">Kampfhelfer öffnen</a>
     <button class="combat-log-new" type="button" data-new-fight>Neuer Kampf</button>
+    <button class="no-print" type="button" data-clear-fights>Alle Kämpfe löschen</button>
+    <p class="no-print" data-combat-log-message role="status" hidden></p>
     <div class="combat-log" data-fights></div>
-    <details class="sheet-legacy">
-      <summary>Manuelle Kampfeinträge</summary>
-      <div class="sheet-rounds sheet-box">${combatRows()}</div>
+    <details class="sheet-fight-history">
+      <summary>Vergangene Kämpfe</summary>
+      <p data-empty-history>Keine früheren Kämpfe im automatischen Protokoll.</p>
+      <div class="combat-log" data-past-fights></div>
+      <details class="sheet-legacy">
+        <summary>Manuelle Kampfeinträge</summary>
+        <div class="sheet-rounds sheet-box">${combatRows()}</div>
+      </details>
     </details>
   </article>
   <article class="sheet-page sheet-action" id="aktionsblatt" aria-labelledby="aktionsblatt-title">
