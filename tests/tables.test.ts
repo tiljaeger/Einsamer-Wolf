@@ -73,7 +73,9 @@ test('table navigation, 130 F/EW cells, 100 accessible selectable fields and ori
   assert.equal((html.match(/aria-pressed="false"/g) ?? []).length, 100);
   assert.ok(html.indexOf('data-random="9"') < html.indexOf('data-random="0"'));
   for (const id of ['kampfresultate', 'zufallszahlen']) {
-    assert.ok(isRulesHash(`#rules-${id}`)); assert.ok(html.includes(`id="rules-${id}"`));
+    assert.ok(isRulesHash(`#rules-${id}`));
+    assert.ok(html.includes(`class="sheet-panel rules-panel" id="${id}" aria-labelledby="rules-${id}" hidden`));
+    assert.ok(html.includes(`<h2 id="rules-${id}"`));
   }
   assert.ok(html.includes('Zeile 10, Spalte 10: 3'));
   assert.ok(html.includes('F = Feind · EW = Einsamer Wolf · T = Tod'));

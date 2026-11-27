@@ -1,16 +1,18 @@
 # Einsamer Wolf
 
-Eine responsive Webseite mit dem Titel **Einsamer Wolf**, eigener SVG-Waldillustration und deutschen Texten. Keine externen Schriftarten, Bilddienste oder Laufzeit-Abhängigkeiten.
+Eine responsive Begleit-App mit Aktionsblatt, Kampfprotokoll und Spielregeln für **Einsamer Wolf**. Keine externen Schriftarten, Bilddienste oder Laufzeit-Abhängigkeiten.
 
 Die technische Struktur orientiert sich an [Wegweiser](https://github.com/tiljaeger/Wegweiser): TypeScript, Vite, Cloudflare Workers mit Static Assets und GitHub Actions für automatische Prüfungen. Eine lokale Spielkarte ergänzt den Charakterbogen; Routingdienste werden nicht verwendet.
 
 ## Digitaler Charakterbogen
 
-Die Webseite enthält ein Aktionsblatt und ein Kampfprotokoll. Die beiden Register wechseln zwischen den Formularseiten. Eingaben werden automatisch im LocalStorage dieses Browsers auf diesem Gerät gespeichert. Ein Browserwechsel, privater Modus oder das Löschen von Websitedaten kann dazu führen, dass Einträge nicht verfügbar sind. Über **Daten exportieren** lässt sich ein JSON-Backup herunterladen und später über **Daten importieren** wiederherstellen. Ungültige Dateien werden abgelehnt, ohne gespeicherte Daten zu ersetzen. **Zurücksetzen** löscht die Einträge nach Bestätigung.
+Die Startseite zeigt Kampfstärke und Ausdauerpunkte oberhalb des Kampfprotokolls. In jedem Kampf stehen Einsamer Wolf, Kampfquotient und Feind nebeneinander. Über **Neuer Kampf** und **Neue Runde** wird das Protokoll fortgeführt. Das übrige Aktionsblatt mit Kai-Disziplinen und Inventar steht darunter. Frühere manuelle Kampfeinträge lassen sich im Kampfprotokoll aufklappen.
+
+Über die Navigationsbuttons sind Spielkarte, Regelhandbuch, Kampfresultat-Tabelle und Zufallszahlen-Tabelle als eigene Ansichten erreichbar. **Startseite** führt zum Aktionsblatt und Kampfprotokoll zurück. Beim Ansichtswechsel bleibt der Spielstand erhalten.
+
+Unter **Spielstand und PDF** stehen die Speicher-, Import-, Export- und Druckfunktionen bereit. Eingaben werden automatisch im LocalStorage dieses Browsers auf diesem Gerät gespeichert. Ein Browserwechsel, privater Modus oder das Löschen von Websitedaten kann dazu führen, dass Einträge nicht verfügbar sind. Über **Daten exportieren** lässt sich ein JSON-Backup herunterladen und später über **Daten importieren** wiederherstellen. Ungültige Dateien werden abgelehnt, ohne gespeicherte Daten zu ersetzen. **Zurücksetzen** löscht die Einträge nach Bestätigung.
 
 **PDF erstellen** öffnet den Druckdialog des Browsers: Dort „Als PDF speichern“ wählen. Beide Seiten werden mit ihren eingetragenen Werten und ohne Bedienknöpfe ausgegeben. Im Seitenlayout kann bei Bedarf die Skalierung angepasst werden.
-
-Das Design folgt der Beschreibung in Issue #2; die dort genannten Originalfotos lagen bei der Umsetzung noch nicht vor und sind für einen genauen Abgleich erforderlich.
 
 ## Als App installieren und offline nutzen
 
@@ -69,14 +71,14 @@ Der GitHub-Workflow **Deploy to Cloudflare** erstellt nach erfolgreichen Prüfun
 
 ## Projektaufbau
 
-- `index.html`: deutscher Seitentitel, Inhalt und eigene SVG-Illustration
+- `index.html`: HTML-Einstieg für die Anwendung
 - `src/main.ts`, `src/style.css`: Vite-Einstieg und responsive Gestaltung
 - `worker/index.ts`: Weiterleitung an Cloudflare Static Assets
 - `wrangler.jsonc`: Worker-Name und Asset-Konfiguration
 - `.github/workflows/ci.yml`: automatische Typprüfung, Linting und Worker-Build
 - `.github/workflows/deploy.yml`: Pull-Request-Vorschau und automatisches Cloudflare-Deployment von `main`
 
-Tastaturfokus, mobiles Layout, SVG-Bildbeschreibung und reduzierte Bewegung werden berücksichtigt. Die Illustrationen und Texte wurden für dieses Projekt erstellt. Ein lokaler Build allein veröffentlicht die Seite noch nicht.
+Die Oberfläche unterstützt Tastaturbedienung und passt sich an schmale Bildschirme an.
 
 ## Spielkarte (Issue #3)
 
@@ -96,19 +98,15 @@ Für eine spätere, rechtlich geprüfte Karte die Datei ersetzen oder `MAP_BACKG
 
 ## Spielregeln (Issue #5)
 
-Das Register **Spielregeln** enthält alle sechs Kapitel für Band 1 aus Issue #5 (eigenständige Zusammenfassungen nach Nutzerfotos der Mantikore-Ausgabe, S. 18–29). Die Inhalte werden separat in `src/rules-data.json` als Kapitel mit stabilen IDs und Markdown gepflegt. Der HTML-Renderer unterstützt Absätze, fett markierte Begriffe, Listen und Tabellen und maskiert HTML.
+Der Button **Regelhandbuch** öffnet das Handbuch. Es enthält alle sechs Kapitel für Band 1 aus Issue #5 (eigenständige Zusammenfassungen nach Nutzerfotos der Mantikore-Ausgabe, S. 18–29). Die Inhalte werden separat in `src/rules-data.json` als Kapitel mit stabilen IDs und Markdown gepflegt. Der HTML-Renderer unterstützt Absätze, fett markierte Begriffe, Listen und Tabellen und maskiert HTML.
 
 Direktlinks wie `/#rules-kampf`, `/#rules-disziplinen`, `/#heilung` und `/#waffenkunde` öffnen das Handbuch automatisch. Aktionsblatt, Inventar und Kampfprotokoll bieten Regelverweise. Der Kai-Rang folgt der Zahl unterschiedlicher, nicht leerer Disziplin-Einträge; ein leerer Bogen erhält keinen angenommenen Startrang. Das bestehende Band-1-Formular behält seine fünf Disziplinfelder. Spielmechaniken und gespeichertes Datenformat bleiben unverändert.
 
-Die vollständige Kampfresultat-Tabelle und das Zufallszahlenraster sind im Regelhandbuch integriert. Die Nachschlagefunktion zeigt Verluste und Todesresultate an, verändert jedoch keine Charakterwerte. Die Regeltexte sind im App-Bundle enthalten und stehen nach Installation des Service Workers auch offline in der PWA bereit. Nach einem Update die App neu öffnen oder die Seite neu laden. Vollständig heruntergeladene Updates aktivieren ihren Service Worker automatisch, auch wenn noch andere App-Fenster geöffnet sind. Ein automatisches Neuladen laufender Formulare erfolgt nicht.
-
-Prüfung: 14 einzelne Tests (Inhalte, Anker, Renderer, Rang, Speicherung und PWA), Typprüfung, ESLint und Worker-Dry-Run erfolgreich. Produktionsbuild in Chromium bei 1280 und 390 Pixeln geprüft: Register, Inhaltsverzeichnis, Kontextlink, Direktlink nach Reload, dynamischer Rang und Offline-Reload des Handbuchs; kein horizontaler Überlauf oder JavaScript-Fehler.
-
-Die Hauptnavigation und eine zusätzliche Schaltfläche auf der Startseite führen direkt zu **Spielregeln**, ohne zuerst den Charakterbogen suchen zu müssen.
+Das Regelhandbuch verlinkt auf die eigenständige Kampfresultat-Tabelle und das Zufallszahlenraster. Die Nachschlagefunktion zeigt Verluste und Todesresultate an, verändert jedoch keine Charakterwerte. Die Regeltexte sind im App-Bundle enthalten und stehen nach Installation des Service Workers auch offline in der PWA bereit. Nach einem Update die App neu öffnen oder die Seite neu laden. Vollständig heruntergeladene Updates aktivieren ihren Service Worker automatisch, auch wenn noch andere App-Fenster geöffnet sind. Ein automatisches Neuladen laufender Formulare erfolgt nicht.
 
 ## Regeltabellen (Issue #6)
 
-Unter **Spielregeln → Kampfresultat-Tabelle / Zufallszahlen-Tabelle** sind beide Tabellen direkt erreichbar, auch über `/#rules-kampfresultate` und `/#rules-zufallszahlen`. Die Kampftabelle zeigt die Zufallszahlen in der Druckreihenfolge 1–9, 0. Kampfquotient und Zufallszahl lassen sich wählen; Zeile, Spalte und Schnittpunkt werden hervorgehoben. Beide Tabellen können auf schmalen Bildschirmen seitlich gescrollt werden. Alle Zufallszahlenfelder sind per Touch und Tastatur auswählbar.
+Die Buttons **Kampfresultat-Tabelle** und **Zufallszahlen-Tabelle** öffnen die eigenständigen Tabellenansichten, auch über `/#rules-kampfresultate` und `/#rules-zufallszahlen`. Die Kampftabelle zeigt die Zufallszahlen in der Druckreihenfolge 1–9, 0. Kampfquotient und Zufallszahl lassen sich wählen; Zeile, Spalte und Schnittpunkt werden hervorgehoben. Beide Tabellen können auf schmalen Bildschirmen seitlich gescrollt werden. Alle Zufallszahlenfelder sind per Touch und Tastatur auswählbar.
 
 Ausschließliche Datenquellen sind `data/spielregeln/kampfresultat_gesamt.csv` und `data/spielregeln/zufallszahlen_tabelle.csv`, entsprechend der Nutzeranweisung. Die Teildateien links/rechts werden nicht eingelesen. Vite bündelt die CSV-Dateien direkt, ohne eine zweite Datentabelle zu erzeugen. Die CSV-Fassung ist die hier geprüfte Referenz; ein zusätzlicher Vergleich mit Originalfotos wird nicht behauptet.
 

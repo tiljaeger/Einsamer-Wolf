@@ -8,8 +8,8 @@ export function renderRandomGrid(tables: ReferenceTables): string {
     </div>`;
 }
 export function renderTables(tables: ReferenceTables): string {
-  return `<section aria-labelledby="rules-kampfresultate">
-    <h3 id="rules-kampfresultate" tabindex="-1">Kampfresultat-Tabelle</h3>
+  return `<section class="sheet-panel rules-panel" id="kampfresultate" aria-labelledby="rules-kampfresultate" hidden>
+    <h2 id="rules-kampfresultate" tabindex="-1">Kampfresultat-Tabelle</h2>
     <p><strong>F = Feind · EW = Einsamer Wolf · T = Tod.</strong> Negative Zahlen sind Ausdauerverluste; −0 bedeutet keinen Verlust. T bedeutet unmittelbaren Tod.</p>
     <p>Die zusammengeführte Gesamt-Resultat-Tabelle ist die Datenquelle. Das Nachschlagen verändert weder Ausdauer noch Spielstand.</p>
     <form class="combat-lookup" aria-label="Kampfresultat nachschlagen">
@@ -24,14 +24,14 @@ export function renderTables(tables: ReferenceTables): string {
         <thead><tr><th scope="col">Zufallszahl</th>${quotientRanges.map((range, column) => `<th scope="col" data-column="${column}">${range.label}</th>`).join('')}</tr></thead>
         <tbody>${[1, 2, 3, 4, 5, 6, 7, 8, 9, 0].map(n => `<tr data-random="${n}"><th scope="row">${n}</th>${tables.combat[n].map((result, column) => `<td data-column="${column}"><span>F: ${display(result.enemy)}</span><span>EW: ${display(result.loneWolf)}</span></td>`).join('')}</tr>`).join('')}</tbody>
       </table>
-    </div><a href="#rules-title">Zum Inhaltsverzeichnis</a>
+    </div><a href="#rules-zufallszahlen">Zur Zufallszahlen-Tabelle</a> · <a href="#rules-title">Zum Regelhandbuch</a>
   </section>
-  <section aria-labelledby="rules-zufallszahlen">
-    <h3 id="rules-zufallszahlen" tabindex="-1">Zufallszahlen-Tabelle</h3>
-    <p>Das Originalraster enthält zehn Zeilen und zehn Spalten. Tippe ein Feld an, um dessen Ziffer auszuwählen und oben nachzuschlagen. Auch dasselbe Feld kann erneut gewählt werden.</p>
+  <section class="sheet-panel rules-panel" id="zufallszahlen" aria-labelledby="rules-zufallszahlen" hidden>
+    <h2 id="rules-zufallszahlen" tabindex="-1">Zufallszahlen-Tabelle</h2>
+    <p>Das Originalraster enthält zehn Zeilen und zehn Spalten. Tippe ein Feld an, um dessen Ziffer für das Nachschlagen in der Kampfresultat-Tabelle auszuwählen. Auch dasselbe Feld kann erneut gewählt werden.</p>
     ${renderRandomGrid(tables)}
     <p class="random-selection rules-notice" role="status" aria-live="polite" aria-atomic="true">Noch kein Feld ausgewählt.</p>
-    <a href="#rules-kampfresultate">Zum Kampfergebnis</a> · <a href="#rules-title">Zum Inhaltsverzeichnis</a>
+    <a href="#rules-kampfresultate">Zum Kampfergebnis</a> · <a href="#rules-title">Zum Regelhandbuch</a>
   </section>`;
 }
 /** Optional callback and bubbling event provide a repeatable selection interface for future helpers. */

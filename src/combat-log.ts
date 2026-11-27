@@ -5,10 +5,10 @@ import type { ReferenceTables } from './table-model.ts';
 const sides = [['wolf', 'Einsamer Wolf'], ['enemy', 'Feind']] as const;
 type Side = typeof sides[number][0];
 
-function field(name: string, label: string, value: number | null, attributes = ''): string {
+function field(name: string, label: string, value: number | null, attributes = '', accessibleLabel = label): string {
   const type = name.startsWith('loss-') ? 'text' : 'number';
   const display = value === null ? 'T' : value;
-  return `<label>${label}<input name="${name}" type="${type}" step="1" ${attributes} value="${display}" required></label>`;
+  return `<label>${label}<input name="${name}" type="${type}" step="1" aria-label="${accessibleLabel}" ${attributes} value="${display}" required></label>`;
 }
 
 function renderRound(round: LoggedRound, index: number): string {
@@ -26,8 +26,8 @@ function renderRound(round: LoggedRound, index: number): string {
 export function renderLoggedFight(fight: LoggedFight, index: number): string {
   const [wolf, enemy] = sides.map(([side, label]) => `<fieldset>
     <legend>${label}</legend>
-    ${field('current-' + side, `Aktuelle AP · ${label}`, fight.current[side], 'min="0"')}
-    ${field('strength-' + side, `KS · ${label}`, fight.strength[side])}
+    ${field('current-' + side, 'Ausdauerpunkte', fight.current[side], 'min="0"', `Aktuelle AP · ${label}`)}
+    ${field('strength-' + side, 'Kampfstärke', fight.strength[side], '', `KS · ${label}`)}
   </fieldset>`);
   const status = logStatus(fight);
   return `<section class="combat-log-fight sheet-box" data-fight="${index}" aria-labelledby="logged-fight-${index}">

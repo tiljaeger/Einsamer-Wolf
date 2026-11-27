@@ -4,7 +4,7 @@ import './combat.css';
 import { referenceTables } from './tables-data';
 import { renderTables, mountTables } from './tables';
 import chapters from './rules-data.json';
-import { renderRules, isRulesHash, kaiRank } from './rules';
+import { renderRules, kaiRank } from './rules';
 import './rules.css';
 import { mountMap } from './map';
 import './style.css';
@@ -16,29 +16,38 @@ const root = document.querySelector<HTMLElement>('#sheet-root');
 if (!root) throw new Error('Der Charakterbogen konnte nicht initialisiert werden.');
 root.innerHTML = `
   <div class="sheet-controls">
-    <p class="sheet-kicker">DEIN ABENTEUER · DEIN CHARAKTER</p>
-    <h2 id="sheet-app-title">Dein Charakterbogen</h2>
-    <p>Deine Einträge bleiben in diesem Browser auf diesem Gerät gespeichert. Sichere sie zusätzlich als Datei.</p>
-    <div class="sheet-tabs" aria-label="Formularseite auswählen">
-      <button type="button" data-tab="aktionsblatt" aria-pressed="true">Aktionsblatt</button>
-      <button type="button" data-tab="kampfprotokoll" aria-pressed="false">Kampfprotokoll</button>
-      <button type="button" data-tab="kampfhelfer" aria-pressed="false">Kampfhelfer</button>
-      <button type="button" data-tab="spielregeln" aria-pressed="false">Spielregeln</button>
-      <button type="button" data-tab="spielkarte" aria-pressed="false">Spielkarte</button>
-    </div>
-    <div class="sheet-actions">
-      <button type="button" data-action="save">Speichern</button>
-      <button type="button" data-action="reset">Zurücksetzen</button>
-      <button type="button" data-action="print">PDF erstellen</button>
-      <button type="button" data-action="export">Daten exportieren</button>
-      <button type="button" data-action="import">Daten importieren</button>
-      <input class="sheet-file" type="file" accept="application/json,.json" aria-label="JSON-Datei zum Import auswählen" hidden>
-    </div>
-    <p class="sheet-status" role="status" aria-live="polite"></p>
+    <h1 id="sheet-app-title">Einsamer Wolf</h1>
+    <nav class="sheet-tabs" aria-label="Spielansichten">
+      <button type="button" data-tab="startseite" aria-controls="startseite" aria-pressed="true">Startseite</button>
+      <button type="button" data-tab="spielkarte" aria-controls="spielkarte" aria-pressed="false">Spielkarte</button>
+      <button type="button" data-tab="rules-title" aria-controls="spielregeln" aria-pressed="false">Regelhandbuch</button>
+      <button type="button" data-tab="rules-kampfresultate" aria-controls="kampfresultate" aria-pressed="false">Kampfresultat-Tabelle</button>
+      <button type="button" data-tab="rules-zufallszahlen" aria-controls="zufallszahlen" aria-pressed="false">Zufallszahlen-Tabelle</button>
+    </nav>
   </div>
-  <div class="sheet-pages">${renderForms()}${renderCombat(referenceTables)}<section class="sheet-panel" id="spielkarte" aria-label="Spielkarte"></section>${renderRules(chapters, renderTables(referenceTables))}</div>`;
+  <div class="sheet-pages">
+    ${renderForms()}
+    <section class="sheet-panel" id="spielkarte" aria-label="Spielkarte" tabindex="-1" hidden></section>
+    ${renderRules(chapters)}
+    <div id="regeltabellen" class="no-print">${renderTables(referenceTables)}</div>
+    ${renderCombat(referenceTables)}
+  </div>
+  <div class="sheet-controls sheet-save-controls">
+    <details>
+      <summary>Spielstand und PDF</summary>
+      <div class="sheet-actions">
+        <button type="button" data-action="save">Speichern</button>
+        <button type="button" data-action="reset">Zurücksetzen</button>
+        <button type="button" data-action="print">PDF erstellen</button>
+        <button type="button" data-action="export">Daten exportieren</button>
+        <button type="button" data-action="import">Daten importieren</button>
+        <input class="sheet-file" type="file" accept="application/json,.json" aria-label="JSON-Datei zum Import auswählen" hidden>
+      </div>
+    </details>
+    <p class="sheet-status" role="status" aria-live="polite"></p>
+  </div>`;
 
-mountTables(root.querySelector<HTMLElement>('#spielregeln')!, referenceTables);
+mountTables(root.querySelector<HTMLElement>('#regeltabellen')!, referenceTables);
 
 const status = root.querySelector<HTMLElement>('.sheet-status')!;
 const upload = root.querySelector<HTMLInputElement>('.sheet-file')!;
@@ -81,7 +90,7 @@ function persist(message = 'Automatisch gespeichert.'): boolean {
 }
 function activate(id: string): void {
   for (const panel of root!.querySelectorAll<HTMLElement>('.sheet-panel')) panel.hidden = panel.id !== id;
-  for (const button of root!.querySelectorAll<HTMLButtonElement>('[data-tab]')) button.setAttribute('aria-pressed', String(button.dataset.tab === id));
+  for (const button of root!.querySelectorAll<HTMLButtonElement>('[data-tab]')) button.setAttribute('aria-pressed', String(button.getAttribute('aria-controls') === id));
 }
 
 try { data = loadData(); setStatus('Deine Einträge werden auf diesem Gerät gespeichert.'); }
@@ -116,18 +125,33 @@ const combat = mountCombat(root.querySelector<HTMLElement>('#kampfhelfer')!, ref
     return true;
   } catch { return false; }
 });
-function followPanelHash(): void {
-  const isCombat = location.hash === '#kampfhelfer';
-  if (!isCombat && !isRulesHash(location.hash)) return;
-  activate(isCombat ? 'kampfhelfer' : 'spielregeln');
-  if (isCombat) combat.open();
-  const target = document.getElementById(isCombat ? 'combat-title' : location.hash.slice(1));
-  target?.focus({ preventScroll: true });
-  target?.scrollIntoView();
+function followPanelHash(focus = true): void {
+  const hash = location.hash;
+  const target = document.getElementById(hash.slice(1));
+  const panel = target?.closest<HTMLElement>('.sheet-panel');
+  const id = panel?.id ?? 'startseite';
+  activate(id);
+  if (id === 'kampfhelfer') combat.open();
+  if (!focus) return;
+  if (target && (panel || hash === '#charakterbogen')) {
+    const heading = id === 'kampfhelfer' ? document.getElementById('combat-title') : target;
+    heading?.focus({ preventScroll: true });
+    heading?.scrollIntoView();
+  } else {
+    root!.querySelector<HTMLButtonElement>('[data-tab="startseite"]')!.focus();
+    window.scrollTo(0, 0);
+  }
 }
-window.addEventListener('hashchange', followPanelHash);
-activate('aktionsblatt');
-followPanelHash();
+window.addEventListener('hashchange', () => followPanelHash());
+followPanelHash(Boolean(location.hash));
+
+const legacyEntries = root.querySelector<HTMLDetailsElement>('.sheet-legacy')!;
+let legacyWasOpen = false;
+window.addEventListener('beforeprint', () => {
+  legacyWasOpen = legacyEntries.open;
+  legacyEntries.open = true;
+});
+window.addEventListener('afterprint', () => { legacyEntries.open = legacyWasOpen; });
 
 for (const field of fields) field.addEventListener('input', () => {
   const path = field.dataset.path!;
@@ -160,10 +184,17 @@ for (const field of fields) field.addEventListener('input', () => {
 
 root.addEventListener('click', event => {
   const link = (event.target as HTMLElement).closest<HTMLAnchorElement>('a');
-  if (link && (isRulesHash(link.hash) || link.hash === '#kampfhelfer') && link.hash === location.hash) followPanelHash();
+  if (link?.hash && link.hash === location.hash) followPanelHash();
   const button = (event.target as HTMLElement).closest<HTMLButtonElement>('button');
   if (!button) return;
-  if (button.dataset.tab) { activate(button.dataset.tab); if (button.dataset.tab === 'kampfhelfer') combat.open(); if (location.hash) history.replaceState(null, '', location.pathname + location.search); return; }
+  if (button.dataset.tab) {
+    const hash = button.dataset.tab === 'startseite' ? '' : '#' + button.dataset.tab;
+    if (hash !== location.hash) history.pushState(null, '', location.pathname + location.search + hash);
+    followPanelHash(false);
+    button.focus({ preventScroll: true });
+    window.scrollTo(0, 0);
+    return;
+  }
   if (button.dataset.action === 'reset') {
     if (!window.confirm('Alle Charakterbogen-Eingaben, Kämpfe und Kartendaten löschen?')) return;
     data = createEmptyData(); storageReadable = true; syncFields(); map.render(); combatLog.render(); persist('Alle Eingaben wurden zurückgesetzt.');
