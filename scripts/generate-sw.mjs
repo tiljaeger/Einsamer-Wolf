@@ -34,7 +34,10 @@ self.addEventListener('fetch', event => {
   const url = new URL(request.url);
   if (request.method !== 'GET' || url.origin !== self.location.origin) return;
   if (request.mode === 'navigate') {
-    event.respondWith(caches.open(CACHE_NAME).then(cache => cache.match('/')).then(response => response || fetch(request)));
+    event.respondWith(fetch(request, { cache: 'no-cache' }).catch(async () => {
+      const cache = await caches.open(CACHE_NAME);
+      return (await cache.match('/')) || Response.error();
+    }));
   } else if (ASSETS.includes(url.pathname)) {
     event.respondWith(caches.open(CACHE_NAME).then(cache => cache.match(url.pathname)).then(response => response || fetch(request)));
   }
