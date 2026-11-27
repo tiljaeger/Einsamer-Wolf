@@ -22,7 +22,7 @@ Die Webseite ist als Progressive Web App (PWA) installierbar. Zuerst die Webseit
 - **Android:** In Chrome die Webseite öffnen und im Menü „App installieren“ oder „Zum Startbildschirm hinzufügen“ wählen. Die genaue Bezeichnung hängt vom Gerät und Browser ab.
 - **Desktop:** In einem unterstützten Browser die Installationsfunktion in der Adressleiste oder im Browsermenü auswählen.
 
-Anschließend die installierte App bei bestehender Verbindung einmal öffnen. Danach lassen sich die heruntergeladenen Seiten auch ohne Internetverbindung aufrufen. Aktualisierungen werden geladen, sobald wieder eine Verbindung besteht; eine vollständig heruntergeladene Version wird automatisch aktiviert und beim nächsten Öffnen oder Neuladen angezeigt. Bereits geöffnete Formulare werden nicht automatisch neu geladen.
+Anschließend die installierte App bei bestehender Verbindung einmal öffnen. Danach lassen sich die heruntergeladenen Seiten auch ohne Internetverbindung aufrufen. Beim Öffnen oder Neuladen mit Internetverbindung lädt die App die aktuelle Seite vom Server. Offline verwendet sie die zuletzt vollständig für die Offline-Nutzung gespeicherte Version. Bereits geöffnete Formulare werden nicht automatisch neu geladen.
 
 Die Einträge verbleiben lokal. Browser und installierte App können getrennte Speicher verwenden, insbesondere auf iPhone und iPad. Um einen bestehenden Bogen zu übernehmen, zuerst im Browser als JSON exportieren und dann in der installierten App importieren. Daten regelmäßig als JSON sichern: Beim Löschen von Website- oder App-Daten können lokale Einträge verloren gehen.
 

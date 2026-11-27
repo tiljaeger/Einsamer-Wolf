@@ -36,7 +36,7 @@ async function generatedWorkers() {
 type RequestLike = { url: string; method: string; mode: string; cache?: string };
 const origin = 'https://wolf.example';
 
-function simulation(source: string, shared?: Map<string, Map<string, string>>, missing?: string) {
+function simulation(source: string, shared?: Map<string, Map<string, string>>, missing?: string, offline = false) {
   const handlers = new Map<string, (event: never) => void>();
   const stores = shared ?? new Map<string, Map<string, string>>();
   const fetches: string[] = [];
@@ -84,7 +84,12 @@ function simulation(source: string, shared?: Map<string, Map<string, string>>, m
     clients: { async claim() { updates.push('claim'); } },
     addEventListener(type: string, handler: (event: never) => void) { handlers.set(type, handler); },
   };
-  const fetch = async (request: RequestLike) => { fetches.push(request.url); return 'net:' + request.url; };
+  const fetch = async (request: RequestLike, options?: { cache: string }) => {
+    fetches.push(request.url);
+    if (request.mode === 'navigate') assert.equal(options?.cache, 'no-cache');
+    if (offline) throw new TypeError('offline');
+    return 'net:' + request.url;
+  };
   runInNewContext(source, { self, caches, fetch, Request: FakeRequest, URL, Promise });
   async function lifecycle(type: string) {
     let pending: Promise<unknown> | undefined;
@@ -107,14 +112,22 @@ function simulation(source: string, shared?: Map<string, Map<string, string>>, m
 
 test('installation precaches the app shell and serves navigations and assets offline', async () => {
   const { first } = await generatedWorkers();
-  const sw = simulation(first);
+  const sw = simulation(first, undefined, undefined, true);
   await sw.lifecycle('install');
   const cache = [...sw.stores.values()][0];
   assert.deepEqual([...cache.keys()].sort(), ['/', '/assets/app.js', '/assets/style.css', '/index.html']);
   assert.deepEqual(await sw.request('/character', 'GET', 'navigate'), { handled: true, value: 'startseite' });
   assert.deepEqual(await sw.request('/assets/app.js?rev=1'), { handled: true, value: 'javascript' });
   assert.deepEqual(await sw.request('/assets/style.css'), { handled: true, value: 'css' });
-  assert.deepEqual(sw.fetches, []);
+  assert.deepEqual(sw.fetches, [origin + '/character']);
+});
+
+test('online navigation checks the server even when an old app shell is cached', async () => {
+  const { first } = await generatedWorkers();
+  const sw = simulation(first);
+  await sw.lifecycle('install');
+  assert.deepEqual(await sw.request('/', 'GET', 'navigate'), { handled: true, value: 'net:' + origin + '/' });
+  assert.deepEqual(await sw.request('/assets/app.js'), { handled: true, value: 'javascript' });
 });
 
 test('worker ignores third-party requests, non-GET methods and unknown assets', async () => {
@@ -129,11 +142,11 @@ test('worker ignores third-party requests, non-GET methods and unknown assets', 
 
 test('a changed build has a new cache and activation removes only old app caches', async () => {
   const { first, second } = await generatedWorkers();
-  const oldWorker = simulation(first);
+  const oldWorker = simulation(first, undefined, undefined, true);
   await oldWorker.lifecycle('install');
   const [oldCache] = oldWorker.stores.keys();
   oldWorker.stores.set('another-application-cache', new Map());
-  const newWorker = simulation(second, oldWorker.stores);
+  const newWorker = simulation(second, oldWorker.stores, undefined, true);
   await newWorker.lifecycle('install');
   const appCaches = [...newWorker.stores.keys()].filter(key => key.startsWith('einsamer-wolf-shell-'));
   assert.equal(appCaches.length, 2, 'changed source must create a new cache');
@@ -159,7 +172,7 @@ test('cache miss falls back to fetch and does not cache unexpected network data'
 
 test('incomplete downloads reject installation without replacing the old cache', async () => {
   const { first, second } = await generatedWorkers();
-  const oldWorker = simulation(first);
+  const oldWorker = simulation(first, undefined, undefined, true);
   await oldWorker.lifecycle('install');
   const [oldCache] = oldWorker.stores.keys();
   const newWorker = simulation(second, oldWorker.stores, '/assets/app.js');
