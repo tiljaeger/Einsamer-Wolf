@@ -10,7 +10,7 @@ import { mountMap } from './map';
 import './style.css';
 import './sheet.css';
 import { renderForms } from './forms';
-import { createEmptyData, exportJSON, importJSON, loadData, parseCharacterData, saveData, type CharacterData } from './state';
+import { clearCombatLog, createEmptyData, exportJSON, importJSON, loadData, parseCharacterData, saveData, type CharacterData } from './state';
 
 const root = document.querySelector<HTMLElement>('#sheet-root');
 if (!root) throw new Error('Der Charakterbogen konnte nicht initialisiert werden.');
@@ -110,6 +110,18 @@ const combatLog = mountCombatLog(root.querySelector<HTMLElement>('#kampfprotokol
     }
   }
   persist();
+}, () => {
+  if (!storageReadable) throw new Error('Der gespeicherte Spielstand konnte nicht gelesen werden.');
+  const candidate = { ...data, kampfprotokoll: clearCombatLog(data.kampfprotokoll) };
+  saveData(candidate);
+  data = candidate;
+  for (const field of fields) {
+    if (!field.dataset.path!.startsWith('kampfprotokoll.kampfrunden.')) continue;
+    field.value = '';
+    field.setCustomValidity('');
+    mirror(field);
+  }
+  setStatus('Alle Kämpfe wurden gelöscht.');
 });
 combatLog.render();
 const combat = mountCombat(root.querySelector<HTMLElement>('#kampfhelfer')!, referenceTables, () => data.kampfprotokoll, value => {
@@ -145,13 +157,15 @@ function followPanelHash(focus = true): void {
 window.addEventListener('hashchange', () => followPanelHash());
 followPanelHash(Boolean(location.hash));
 
-const legacyEntries = root.querySelector<HTMLDetailsElement>('.sheet-legacy')!;
-let legacyWasOpen = false;
+const printDetails = [...root.querySelectorAll<HTMLDetailsElement>('.sheet-fight-history, .sheet-legacy')];
+let openBeforePrint: boolean[] = [];
 window.addEventListener('beforeprint', () => {
-  legacyWasOpen = legacyEntries.open;
-  legacyEntries.open = true;
+  openBeforePrint = printDetails.map(details => details.open);
+  for (const details of printDetails) details.open = true;
 });
-window.addEventListener('afterprint', () => { legacyEntries.open = legacyWasOpen; });
+window.addEventListener('afterprint', () => {
+  printDetails.forEach((details, index) => { details.open = openBeforePrint[index]; });
+});
 
 for (const field of fields) field.addEventListener('input', () => {
   const path = field.dataset.path!;

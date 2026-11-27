@@ -1,4 +1,4 @@
-import { changeStrength, parseLoggedFights, type LoggedFight } from './combat-log-state.ts';
+import { changeStrength, isFinishedFight, parseLoggedFights, type LoggedFight } from './combat-log-state.ts';
 import { emptyMap, parseMap, type MapData } from './map-state.ts';
 /** Versioned, browser-local data for the two sheets. Empty numeric fields remain empty. */
 export type NumericValue = number | '';
@@ -31,7 +31,7 @@ export interface CharacterData {
 /** The latest fight uses the character's live stats. Older fights keep their recorded values. */
 export function readLoggedFight(sheet: CharacterData['kampfprotokoll'], index: number): LoggedFight {
   const fight = sheet.kaempfe[index];
-  if (index !== sheet.kaempfe.length - 1) return fight;
+  if (index !== sheet.kaempfe.length - 1 || isFinishedFight(fight)) return fight;
   const current = { ...fight.current, wolf: sheet.ausdauerAktuell === '' ? fight.current.wolf : sheet.ausdauerAktuell };
   const live = { ...fight, current };
   if (sheet.kampfstaerke !== '') changeStrength(live, 'wolf', sheet.kampfstaerke);
@@ -39,6 +39,14 @@ export function readLoggedFight(sheet: CharacterData['kampfprotokoll'], index: n
 }
 
 export const STORAGE_KEY = 'einsamer-wolf-charakterbogen-v1';
+
+function emptyManualRounds(): CombatRound[] {
+  return Array.from({ length: 7 }, () => ({ einsamerWolfAP: '', kampfquotient: '', feindAP: '' }));
+}
+
+export function clearCombatLog(sheet: CharacterData['kampfprotokoll']): CharacterData['kampfprotokoll'] {
+  return { ...sheet, kaempfe: [], kampfrunden: emptyManualRounds() };
+}
 
 export function createEmptyData(): CharacterData {
   return {
@@ -52,7 +60,7 @@ export function createEmptyData(): CharacterData {
     kampfprotokoll: {
       kampfstaerke: '', ausdauerGrundwert: '', ausdauerAktuell: '',
       kaempfe: [],
-      kampfrunden: Array.from({ length: 7 }, () => ({ einsamerWolfAP: '', kampfquotient: '', feindAP: '' })),
+      kampfrunden: emptyManualRounds(),
     },
   };
 }

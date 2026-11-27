@@ -100,3 +100,23 @@
 .sheet-app :is([data-new-round], [data-combat="start"], [data-combat="confirm"]):enabled:active {
   background: #592e14;
 }
+
+.sheet-fight-history {
+  margin-top: .85rem;
+}
+.sheet-fight-history > summary {
+  width: fit-content;
+  margin-bottom: .6rem;
+  padding: .65rem 1rem;
+  border: 1px solid #a99b7e;
+  border-radius: 4px;
+  background: #40584c;
+  color: #f5eddb;
+}
+.sheet-fight-history > summary:hover { background: #4d6759; }
+.sheet-app [data-clear-fights]:enabled { background: #823629; }
+.sheet-app [data-clear-fights]:enabled:hover { background: #963e2e; }
+
+@media print {
+  .sheet-fight-history > summary { padding: 0; border: 0; background: none; color: #000; }
+}

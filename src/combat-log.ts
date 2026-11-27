@@ -1,4 +1,4 @@
-import { addLoggedRound, changeStrength, correctRound, logStatus, newLoggedFight, type LoggedFight, type LoggedRound } from './combat-log-state.ts';
+import { addLoggedRound, changeStrength, correctRound, isFinishedFight, logStatus, newLoggedFight, type LoggedFight, type LoggedRound } from './combat-log-state.ts';
 import { readLoggedFight, type CharacterData } from './state.ts';
 import type { ReferenceTables } from './table-model.ts';
 
@@ -45,8 +45,62 @@ export function renderLoggedFight(fight: LoggedFight, index: number): string {
 }
 
 export function mountCombatLog(root: HTMLElement, tables: ReferenceTables, read: () => CharacterData['kampfprotokoll'],
-  save: (sheet: CharacterData['kampfprotokoll']) => void) {
+  save: (sheet: CharacterData['kampfprotokoll']) => void, clear: () => void) {
   const list = root.querySelector<HTMLElement>('[data-fights]')!;
+  const past = root.querySelector<HTMLElement>('[data-past-fights]')!;
+  const history = root.querySelector<HTMLDetailsElement>('.sheet-fight-history')!;
+  const emptyHistory = root.querySelector<HTMLElement>('[data-empty-history]')!;
+  const message = root.querySelector<HTMLElement>('[data-combat-log-message]')!;
+  const clearButton = root.querySelector<HTMLButtonElement>('[data-clear-fights]')!;
+
+  function setMessage(text: string): void {
+    message.hidden = !text;
+    message.textContent = text;
+  }
+
+  function updateControls(): void {
+    const sheet = read();
+    emptyHistory.hidden = past.childElementCount > 0;
+    clearButton.disabled = sheet.kaempfe.length === 0 &&
+      !sheet.kampfrunden.some(round => Object.values(round).some(value => value !== ''));
+  }
+
+  function placeLatest(card: HTMLElement, fight: LoggedFight): void {
+    const finished = isFinishedFight(fight);
+    const destination = finished ? past : list;
+    card.querySelector<HTMLButtonElement>('[data-new-round]')!.hidden = finished;
+    if (card.parentElement === destination) return;
+    const hadFocus = card.contains(document.activeElement);
+    destination.append(card);
+    if (hadFocus) {
+      const focusTarget = finished ? history.querySelector('summary') : card.querySelector('input');
+      focusTarget?.focus();
+    }
+  }
+
+  function render(): void {
+    setMessage('');
+    const sheet = read();
+    const latest = sheet.kaempfe.length - 1;
+    list.innerHTML = latest < 0 ? '' : renderLoggedFight(readLoggedFight(sheet, latest), latest);
+    past.innerHTML = sheet.kaempfe.slice(0, -1).map((fight, index) => renderLoggedFight(fight, index)).join('');
+    for (const button of past.querySelectorAll<HTMLButtonElement>('[data-new-round]')) button.hidden = true;
+    const card = list.firstElementChild as HTMLElement | null;
+    if (card) placeLatest(card, readLoggedFight(sheet, latest));
+    updateControls();
+  }
+
+  function syncLatest(): void {
+    const sheet = read();
+    const index = sheet.kaempfe.length - 1;
+    const card = root.querySelector<HTMLElement>(`[data-fight="${index}"]`);
+    if (card) {
+      const fight = readLoggedFight(sheet, index);
+      placeLatest(card, fight);
+      sync(card, fight);
+    }
+    updateControls();
+  }
 
   function sync(card: HTMLElement, fight: LoggedFight): void {
     const status = logStatus(fight);
@@ -83,6 +137,7 @@ export function mountCombatLog(root: HTMLElement, tables: ReferenceTables, read:
     const sheet = structuredClone(read());
     const index = Number(card.dataset.fight);
     const fight = readLoggedFight(sheet, index);
+    const wasFinished = isFinishedFight(fight);
     const before = { ap: fight.current.wolf, ks: fight.strength.wolf };
     const row = input.closest<HTMLElement>('[data-round]');
     const [name, side] = input.name.split('-') as [string, Side];
@@ -106,7 +161,7 @@ export function mountCombatLog(root: HTMLElement, tables: ReferenceTables, read:
         } else fight.quotient = value;
       }
       sheet.kaempfe[index] = fight;
-      if (index === sheet.kaempfe.length - 1) {
+      if (index === sheet.kaempfe.length - 1 && (!wasFinished || !isFinishedFight(fight))) {
         if (fight.current.wolf !== before.ap || (!row && name === 'current' && side === 'wolf')) {
           sheet.ausdauerAktuell = fight.current.wolf;
         }
@@ -119,7 +174,8 @@ export function mountCombatLog(root: HTMLElement, tables: ReferenceTables, read:
     } catch (error) {
       showError(card, error instanceof Error ? error.message : 'Die Korrektur ist ungültig.');
     }
-    sync(card, readLoggedFight(read(), index));
+    if (index === read().kaempfe.length - 1) syncLatest();
+    else sync(card, readLoggedFight(read(), index));
   });
 
   root.addEventListener('click', event => {
@@ -131,9 +187,21 @@ export function mountCombatLog(root: HTMLElement, tables: ReferenceTables, read:
       const fight = newLoggedFight(sheet.ausdauerAktuell || 0, sheet.kampfstaerke || 0);
       sheet.kaempfe.push(fight);
       save(sheet);
-      list.insertAdjacentHTML('beforeend', renderLoggedFight(fight, previous + 1));
+      render();
       list.lastElementChild?.querySelector<HTMLInputElement>('[name="current-wolf"]')?.focus();
-    } else if (button?.hasAttribute('data-new-round')) {
+    } else if (button === clearButton) {
+      if (!window.confirm('Alle Kämpfe und manuellen Kampfeinträge endgültig löschen?')) return;
+      try {
+        clear();
+      } catch {
+        setMessage('Die Kämpfe konnten nicht gelöscht werden. Bitte prüfe den Browserspeicher.');
+        return;
+      }
+      history.open = false;
+      render();
+      setMessage('Alle Kämpfe wurden gelöscht.');
+      root.querySelector<HTMLButtonElement>('[data-new-fight]')!.focus();
+    } else if (button?.hasAttribute('data-new-round') && list.contains(button)) {
       const card = button.closest<HTMLElement>('[data-fight]')!;
       const fightIndex = Number(card.dataset.fight);
       const sheet = structuredClone(read());
@@ -150,21 +218,17 @@ export function mountCombatLog(root: HTMLElement, tables: ReferenceTables, read:
         return;
       }
       card.querySelector('[data-fight-rounds]')!.insertAdjacentHTML('beforeend', renderRound(fight.rounds[roundIndex], roundIndex));
-      sync(card, fight);
+      const status = logStatus(fight);
+      if (status) {
+        setMessage(status);
+        syncLatest();
+        history.querySelector('summary')?.focus();
+      } else {
+        sync(card, fight);
+      }
       showError(card, '');
-      if (button.disabled) card.querySelector<HTMLInputElement>(`[data-round="${roundIndex}"] input`)?.focus();
     }
   });
 
-  return {
-    render: () => {
-      const sheet = read();
-      list.innerHTML = sheet.kaempfe.map((_, index) => renderLoggedFight(readLoggedFight(sheet, index), index)).join('');
-    },
-    syncLatest: () => {
-      const sheet = read();
-      const card = list.lastElementChild as HTMLElement | null;
-      if (card) sync(card, readLoggedFight(sheet, sheet.kaempfe.length - 1));
-    },
-  };
+  return { render, syncLatest };
 }
