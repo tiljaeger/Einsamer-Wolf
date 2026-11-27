@@ -98,8 +98,13 @@ test('old saves migrate and new fights survive JSON export and a storage reload'
   assert.deepEqual(loadData(storage), migrated);
 });
 
+test('the start page combines character stats, combat log and action sheet', () => {
+  const html = renderForms();
+  assert.deepEqual([...html.matchAll(/class="sheet-panel" id="([^"]+)"/g)].map(match => match[1]), ['startseite']);
+  assert.match(html, /class="sheet-stats"[\s\S]+data-path="kampfprotokoll.kampfstaerke"[\s\S]+data-path="kampfprotokoll.ausdauerAktuell"[\s\S]+>Kampfprotokoll<\/h2>[\s\S]+data-new-fight>Neuer Kampf[\s\S]+data-fights[\s\S]+id="aktionsblatt"/);
+});
+
 test('combat log renders editable labelled values and exposes the finished state', () => {
-  assert.match(renderForms(), /data-new-fight>Neuer Kampf/);
   const fight = newLoggedFight(20, 20);
   fight.current.enemy = 15;
   addLoggedRound(fight, tables, 8);

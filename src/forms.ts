@@ -25,8 +25,21 @@ function combatRows(): string {
 
 /** Liefert beide Formularseiten. Felder werden über data-path mit CharacterData verbunden. */
 export function renderForms(): string {
-  return `<section class="sheet-panel" id="aktionsblatt" aria-labelledby="aktionsblatt-title">
-  <article class="sheet-page sheet-action">
+  return `<section class="sheet-panel" id="startseite" aria-label="Aktionsblatt und Kampfprotokoll">
+  <article class="sheet-page sheet-combat" id="kampfprotokoll" aria-labelledby="kampfprotokoll-title">
+    <div class="sheet-stats">
+      <section class="sheet-box sheet-stat"><h3 class="sheet-heading">KAMPFSTÄRKE</h3>${numberField('kampfprotokoll.kampfstaerke', 'Kampfstärke')}<p class="sheet-notes">Ausrüstungs- und Abenteuerboni in die aktuelle Kampfstärke einrechnen.</p></section>
+      <section class="sheet-box sheet-stat sheet-endurance"><h3 class="sheet-heading">AUSDAUERPUNKTE</h3><div class="sheet-endurance-fields"><label>Grundwert ${numberField('kampfprotokoll.ausdauerGrundwert', 'Ausdauer Grundwert', 'min="0"')}</label><label>Aktuell ${numberField('kampfprotokoll.ausdauerAktuell', 'Aktuelle Ausdauerpunkte', 'min="0"')}</label></div><div class="sheet-notes"><p>kann nie über den Grundwert steigen.</p><p>0 = Tot</p></div></section>
+    </div>
+    <h2 class="sheet-title" id="kampfprotokoll-title">Kampfprotokoll</h2><a class="rule-link" href="#rules-kampf">Kampfregeln</a><a class="rule-link" href="#kampfhelfer">Kampfhelfer öffnen</a>
+    <button class="combat-log-new" type="button" data-new-fight>Neuer Kampf</button>
+    <div class="combat-log" data-fights></div>
+    <details class="sheet-legacy">
+      <summary>Manuelle Kampfeinträge</summary>
+      <div class="sheet-rounds sheet-box">${combatRows()}</div>
+    </details>
+  </article>
+  <article class="sheet-page sheet-action" id="aktionsblatt" aria-labelledby="aktionsblatt-title">
     <h2 class="sheet-title" id="aktionsblatt-title">AKTIONSBLATT</h2><a class="rule-link" href="#rules-startwerte">Regeln zu Startwerten</a><a class="rule-link" href="#kampfhelfer">Kampfhelfer öffnen</a>
     <section class="sheet-section sheet-disciplines" aria-labelledby="discipline-heading">
       <h3 class="sheet-heading" id="discipline-heading">KAI DISZIPLINEN</h3>
@@ -49,20 +62,6 @@ export function renderForms(): string {
       <section class="sheet-box sheet-purse" aria-labelledby="purse-heading"><h3 class="sheet-heading" id="purse-heading">GELDBÖRSE</h3><p>Beinhaltet Goldkronen (maximal 50)</p>${numberField('aktionsblatt.goldkronen', 'Goldkronen', 'min="0" max="50"')}</section>
     </div>
     <footer class="sheet-footer"><span>KS = KAMPFSTÄRKE</span><span>AP = AUSDAUERPUNKTE</span></footer>
-  </article>
-</section>
-<section class="sheet-panel" id="kampfprotokoll" aria-labelledby="kampfprotokoll-title">
-  <article class="sheet-page sheet-combat">
-    <div class="sheet-stats">
-      <section class="sheet-box sheet-stat"><h3 class="sheet-heading">KAMPFSTÄRKE</h3>${numberField('kampfprotokoll.kampfstaerke', 'Kampfstärke')}<p class="sheet-notes">Ausrüstungs- und Abenteuerboni in die aktuelle Kampfstärke einrechnen.</p></section>
-      <section class="sheet-box sheet-stat sheet-endurance"><h3 class="sheet-heading">AUSDAUERPUNKTE</h3><div class="sheet-endurance-fields"><label>Grundwert ${numberField('kampfprotokoll.ausdauerGrundwert', 'Ausdauer Grundwert', 'min="0"')}</label><label>Aktuell ${numberField('kampfprotokoll.ausdauerAktuell', 'Aktuelle Ausdauerpunkte', 'min="0"')}</label></div><div class="sheet-notes"><p>kann nie über den Grundwert steigen.</p><p>0 = Tot</p></div></section>
-    </div>
-    <h2 class="sheet-title" id="kampfprotokoll-title">KAMPFPROTOKOLL</h2><a class="rule-link" href="#rules-kampf">Kampfregeln</a><a class="rule-link" href="#kampfhelfer">Kampfhelfer öffnen</a>
-    <button class="combat-log-new" type="button" data-new-fight>Neuer Kampf</button>
-    <div class="combat-log" data-fights></div>
-    <div class="sheet-combat-headings" aria-hidden="true"><span>AUSDAUERPUNKTE</span><span></span><span>AUSDAUERPUNKTE</span></div>
-    <div class="sheet-rounds sheet-box">${combatRows()}</div>
-    <div class="sheet-ornament" aria-hidden="true">✦</div>
   </article>
 </section>`;
 }
