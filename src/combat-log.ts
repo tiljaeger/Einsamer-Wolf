@@ -24,8 +24,11 @@ function renderRound(round: LoggedRound, index: number): string {
 }
 
 export function renderLoggedFight(fight: LoggedFight, index: number): string {
+  const enemyName = (fight.enemyName ?? '').replaceAll('&', '&amp;').replaceAll('"', '&quot;')
+    .replaceAll('<', '&lt;').replaceAll('>', '&gt;');
   const [wolf, enemy] = sides.map(([side, label]) => `<fieldset>
     <legend>${label}</legend>
+    ${side === 'enemy' ? `<label>Name<input name="enemy-name" type="text" aria-label="Name des Feindes" value="${enemyName}"></label>` : ''}
     ${field('current-' + side, 'Ausdauerpunkte', fight.current[side], 'min="0"', `Aktuelle AP · ${label}`)}
     ${field('strength-' + side, 'Kampfstärke', fight.strength[side], '', `KS · ${label}`)}
   </fieldset>`);
@@ -44,9 +47,9 @@ export function renderLoggedFight(fight: LoggedFight, index: number): string {
     <p data-fight-status role="status">${status || 'Kampf läuft.'}</p>
     <div class="combat-actions">
       <button type="button" data-roll-round ${isFinishedFight(fight) ? 'disabled' : ''}>Würfeln</button>
-      <button type="button" data-new-round ${status ? 'disabled' : ''}>Neue Runde</button>
+      <button type="button" data-new-round ${status ? 'disabled' : ''}>Kämpfen</button>
     </div>
-    <div data-fight-rounds>${fight.rounds.map(renderRound).join('')}</div>
+    <div data-fight-rounds>${fight.rounds.map(renderRound).reverse().join('')}</div>
     <p data-fight-error role="alert" hidden></p>
   </section>`;
 }
@@ -115,7 +118,7 @@ export function mountCombatLog(root: HTMLElement, tables: ReferenceTables, read:
     card.querySelector<HTMLButtonElement>('[data-new-round]')!.disabled = Boolean(status);
     card.querySelector<HTMLButtonElement>('[data-roll-round]')!.disabled = isFinishedFight(fight);
     card.querySelector<HTMLOutputElement>('[data-pending-random]')!.value = String(fight.pendingRandom ?? '–');
-    for (const input of card.querySelectorAll<HTMLInputElement>('input')) {
+    for (const input of card.querySelectorAll<HTMLInputElement>('input:not([name="enemy-name"])')) {
       const row = input.closest<HTMLElement>('[data-round]');
       const [name, side] = input.name.split('-') as [string, Side];
       let value: number | null;
@@ -145,6 +148,17 @@ export function mountCombatLog(root: HTMLElement, tables: ReferenceTables, read:
     if (!card) return;
     const sheet = structuredClone(read());
     const index = Number(card.dataset.fight);
+    if (input.name === 'enemy-name') {
+      try {
+        sheet.kaempfe[index].enemyName = input.value;
+        save(sheet);
+        showError(card, '');
+      } catch (error) {
+        input.value = read().kaempfe[index].enemyName ?? '';
+        showError(card, error instanceof Error ? error.message : 'Der Feindname konnte nicht gespeichert werden.');
+      }
+      return;
+    }
     const fight = readLoggedFight(sheet, index);
     const wasFinished = isFinishedFight(fight);
     const before = { ap: fight.current.wolf, ks: fight.strength.wolf };
@@ -240,7 +254,7 @@ export function mountCombatLog(root: HTMLElement, tables: ReferenceTables, read:
         showError(card, error instanceof Error ? error.message : 'Die Runde konnte nicht erfasst werden.');
         return;
       }
-      card.querySelector('[data-fight-rounds]')!.insertAdjacentHTML('beforeend', renderRound(fight.rounds[roundIndex], roundIndex));
+      card.querySelector('[data-fight-rounds]')!.insertAdjacentHTML('afterbegin', renderRound(fight.rounds[roundIndex], roundIndex));
       const status = logStatus(fight);
       if (status) {
         setMessage(status);

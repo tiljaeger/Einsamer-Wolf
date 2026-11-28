@@ -145,7 +145,7 @@ test('combat log renders editable labelled values and exposes the finished state
   const html = renderLoggedFight(fight, 1);
   assert.match(html, /Kampf 2/);
   assert.match(html, /Einsamer Wolf<\/legend>[\s\S]+Zufallszahl<\/span>[\s\S]+Kampfquotient \(KQ\)<input[^>]*value="20"[\s\S]+Feind<\/legend>/);
-  assert.match(html, /data-new-round disabled>Neue Runde/);
+  assert.match(html, /data-new-round disabled>Kämpfen/);
   assert.match(html, /role="status">Kampf beendet/);
   assert.match(html, /Verlust Feind \(AP\/T\)<input[^>]+value="T"/);
   assert.match(html, /Zufallszahl<input[^>]+value="8"/);
@@ -240,4 +240,33 @@ test('pending zero survives JSON and storage while older saves need no pending v
   assert.equal(importJSON(exportJSON(data)).kampfprotokoll.kaempfe[0].pendingRandom, 0);
   fight.pendingRandom = 10;
   assert.throws(() => saveData(data, storage));
+});
+
+test('enemy names survive a JSON round trip and are escaped in the fight card', () => {
+  const data = createEmptyData();
+  const fight = newLoggedFight(20, 17);
+  data.kampfprotokoll.kaempfe.push(fight);
+  assert.equal(importJSON(exportJSON(data)).kampfprotokoll.kaempfe[0].enemyName, undefined);
+
+  fight.enemyName = 'Giak "Rot" & <Schatten>';
+  const restored = importJSON(exportJSON(data)).kampfprotokoll.kaempfe[0];
+  assert.equal(restored.enemyName, fight.enemyName);
+  assert.match(renderLoggedFight(restored, 0), /name="enemy-name"[^>]*value="Giak &quot;Rot&quot; &amp; &lt;Schatten&gt;"/);
+
+  const invalid = JSON.parse(exportJSON(data));
+  invalid.kampfprotokoll.kaempfe[0].enemyName = 23;
+  assert.throws(() => importJSON(JSON.stringify(invalid)), /Ungültige Kampfdaten/);
+});
+
+test('rounds render newest first with original numbers and indices', () => {
+  const fight = newLoggedFight(80, 17);
+  fight.current.enemy = 80;
+  rollLoggedRound(fight, () => 0.2);
+  addLoggedRound(fight, tables);
+  rollLoggedRound(fight, () => 0.3);
+  addLoggedRound(fight, tables);
+
+  const html = renderLoggedFight(fight, 0);
+  assert.match(html, /data-round="1">\s*<legend>Runde 2<\/legend>[\s\S]+data-round="0">\s*<legend>Runde 1<\/legend>/);
+  assert.deepEqual(fight.rounds.map(round => round.random), [2, 3]);
 });

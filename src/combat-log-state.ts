@@ -18,6 +18,7 @@ export interface LoggedFight {
   current: Endurance;
   rounds: LoggedRound[];
   pendingRandom?: number;
+  enemyName?: string;
 }
 
 export function newLoggedFight(wolfAP: number, wolfKS: number): LoggedFight {
@@ -122,12 +123,13 @@ export function parseLoggedFights(value: unknown): LoggedFight[] {
   if (value === undefined) return [];
   if (!Array.isArray(value)) throw invalid();
   return value.map(entry => {
-    const { strength, quotient, current, rounds, pendingRandom } = record(entry);
-    if (!Array.isArray(rounds)) throw invalid();
+    const { strength, quotient, current, rounds, pendingRandom, enemyName } = record(entry);
+    if (!Array.isArray(rounds) || (enemyName !== undefined && typeof enemyName !== 'string')) throw invalid();
     return {
       strength: pair(strength, Number.MIN_SAFE_INTEGER),
       quotient: integer(quotient, Number.MIN_SAFE_INTEGER),
       current: pair(current),
+      ...(enemyName === undefined ? {} : { enemyName }),
       ...(pendingRandom === undefined ? {} : { pendingRandom: integer(pendingRandom, 0, 9) }),
       rounds: rounds.map(entry => {
         const { quotient, random, losses, before, after } = record(entry);
