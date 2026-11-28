@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { addLoggedRound, changeStrength, correctRound, logStatus, newLoggedFight } from '../src/combat-log-state.ts';
+import { addLoggedRound, changeStrength, correctRound, logStatus, newLoggedFight, rollLoggedRound } from '../src/combat-log-state.ts';
 import { renderLoggedFight } from '../src/combat-log.ts';
 import { renderForms } from '../src/forms.ts';
 import { clearCombatLog, createEmptyData, exportJSON, importJSON, loadData, parseCharacterData, readLoggedFight, saveData } from '../src/state.ts';
@@ -32,7 +32,8 @@ test('all digits use the reference table and the corrected current values feed t
     const fight = newLoggedFight(20, 17);
     fight.current.enemy = 20;
     changeStrength(fight, 'enemy', 20);
-    addLoggedRound(fight, tables, digit);
+    rollLoggedRound(fight, () => digit / 10);
+    addLoggedRound(fight, tables);
     const { loneWolf, enemy } = tables.getCombatResult(-3, digit);
     assert.deepEqual(fight.rounds[0].losses, { wolf: loneWolf.loss, enemy: enemy.loss });
     assert.deepEqual(fight.current, fight.rounds[0].after);
@@ -41,12 +42,14 @@ test('all digits use the reference table and the corrected current values feed t
   const fight = newLoggedFight(20, 17);
   fight.current.enemy = 20;
   changeStrength(fight, 'enemy', 20);
-  addLoggedRound(fight, tables, 6);
+  rollLoggedRound(fight, () => 6 / 10);
+  addLoggedRound(fight, tables);
   assert.deepEqual(fight.current, { wolf: 17, enemy: 14 });
   correctRound(fight, 0, 'loss', 2, 'enemy', tables);
   correctRound(fight, 0, 'after', 19, 'wolf', tables);
   fight.quotient = 1;
-  addLoggedRound(fight, tables, 5);
+  rollLoggedRound(fight, () => 5 / 10);
+  addLoggedRound(fight, tables);
   assert.deepEqual(fight.rounds[1].before, { wolf: 19, enemy: 18 });
   assert.equal(fight.rounds[1].quotient, 1);
   const current = { ...fight.current };
@@ -56,14 +59,15 @@ test('all digits use the reference table and the corrected current values feed t
 
 test('rolling stops after T or zero AP and resumes after explicit corrections', () => {
   const fight = newLoggedFight(20, 20);
-  assert.throws(() => addLoggedRound(fight, tables, 8));
+  assert.throws(() => addLoggedRound(fight, tables));
   fight.current.enemy = 15;
   fight.quotient = 999;
-  addLoggedRound(fight, tables, 8);
+  rollLoggedRound(fight, () => 8 / 10);
+  addLoggedRound(fight, tables);
   assert.equal(fight.rounds[0].losses.enemy, null);
   assert.equal(fight.current.enemy, 0);
   assert.match(logStatus(fight), /Feind ist tot/);
-  assert.throws(() => addLoggedRound(fight, tables, 8));
+  assert.throws(() => addLoggedRound(fight, tables));
   assert.throws(() => correctRound(fight, 0, 'after', 10, 'enemy', tables));
   correctRound(fight, 0, 'quotient', 0, 'enemy', tables);
   assert.equal(logStatus(fight), '');
@@ -79,7 +83,8 @@ test('old saves migrate and new fights survive JSON export and a storage reload'
   assert.deepEqual(data.kampfprotokoll.kaempfe, []);
   const fight = newLoggedFight(20, 20);
   fight.current.enemy = 10;
-  addLoggedRound(fight, tables, 8);
+  rollLoggedRound(fight, () => 8 / 10);
+  addLoggedRound(fight, tables);
   data.kampfprotokoll.kaempfe.push(fight, newLoggedFight(15, 17));
   const migrated = parseCharacterData(data);
   assert.equal(migrated.kampfprotokoll.ausdauerAktuell, 15);
@@ -135,10 +140,11 @@ test('clearing all fights and manual entries survives a JSON round trip and reta
 test('combat log renders editable labelled values and exposes the finished state', () => {
   const fight = newLoggedFight(20, 20);
   fight.current.enemy = 15;
-  addLoggedRound(fight, tables, 8);
+  rollLoggedRound(fight, () => 8 / 10);
+  addLoggedRound(fight, tables);
   const html = renderLoggedFight(fight, 1);
   assert.match(html, /Kampf 2/);
-  assert.match(html, /Einsamer Wolf<\/legend>[\s\S]+Kampfquotient \(KQ\)<input[^>]*value="20"[\s\S]+Feind<\/legend>/);
+  assert.match(html, /Einsamer Wolf<\/legend>[\s\S]+Zufallszahl<\/span>[\s\S]+Kampfquotient \(KQ\)<input[^>]*value="20"[\s\S]+Feind<\/legend>/);
   assert.match(html, /data-new-round disabled>Neue Runde/);
   assert.match(html, /role="status">Kampf beendet/);
   assert.match(html, /Verlust Feind \(AP\/T\)<input[^>]+value="T"/);
@@ -161,7 +167,8 @@ test('the latest fight follows character stats and keeps historical rounds on re
   sheet.kampfstaerke = 19;
   const liveFight = readLoggedFight(sheet, 1);
   assert.equal(liveFight.quotient, -1);
-  addLoggedRound(liveFight, tables, 6);
+  rollLoggedRound(liveFight, () => 6 / 10);
+  addLoggedRound(liveFight, tables);
   sheet.ausdauerAktuell = liveFight.current.wolf;
   sheet.kaempfe[1] = liveFight;
 
@@ -185,7 +192,8 @@ test('new character stats do not reopen the last completed fight on reload', () 
   const fight = newLoggedFight(1, 17);
   fight.current.enemy = 30;
   changeStrength(fight, 'enemy', 20);
-  addLoggedRound(fight, tables, 6);
+  rollLoggedRound(fight, () => 6 / 10);
+  addLoggedRound(fight, tables);
   assert.equal(fight.current.wolf, 0);
   sheet.kaempfe.push(fight);
   sheet.ausdauerAktuell = 20;
@@ -195,4 +203,41 @@ test('new character stats do not reopen the last completed fight on reload', () 
   assert.deepEqual(readLoggedFight(reloaded, 0), fight);
   assert.equal(reloaded.ausdauerAktuell, 20);
   assert.equal(reloaded.kampfstaerke, 19);
+});
+
+test('rolling changes only the pending digit and evaluation consumes it once', () => {
+  const fight = newLoggedFight(80, 17);
+  fight.current.enemy = 80;
+  changeStrength(fight, 'enemy', 20);
+  assert.throws(() => addLoggedRound(fight, tables), /zuerst würfeln/);
+  rollLoggedRound(fight, () => 0.6);
+  addLoggedRound(fight, tables);
+  const before = structuredClone(fight);
+  for (let digit = 0; digit < 10; digit++) {
+    rollLoggedRound(fight, () => (digit + 0.5) / 10);
+    assert.deepEqual(fight, { ...before, pendingRandom: digit });
+  }
+  rollLoggedRound(fight, () => 0);
+  addLoggedRound(fight, tables);
+  assert.equal(fight.rounds[1].random, 0);
+  assert.deepEqual(fight.rounds[0], before.rounds[0]);
+  assert.throws(() => addLoggedRound(fight, tables), /zuerst würfeln/);
+});
+
+test('pending zero survives JSON and storage while older saves need no pending value', () => {
+  const data = createEmptyData();
+  const fight = newLoggedFight(20, 17);
+  fight.current.enemy = 20;
+  data.kampfprotokoll.kaempfe.push(fight);
+  const older = importJSON(exportJSON(data));
+  assert.equal(older.kampfprotokoll.kaempfe[0].pendingRandom, undefined);
+
+  rollLoggedRound(fight, () => 0);
+  let saved = '';
+  const storage = { getItem: () => saved, setItem: (_key: string, value: string) => { saved = value; } } as Storage;
+  saveData(data, storage);
+  assert.equal(loadData(storage).kampfprotokoll.kaempfe[0].pendingRandom, 0);
+  assert.equal(importJSON(exportJSON(data)).kampfprotokoll.kaempfe[0].pendingRandom, 0);
+  fight.pendingRandom = 10;
+  assert.throws(() => saveData(data, storage));
 });

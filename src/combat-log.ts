@@ -1,4 +1,4 @@
-import { addLoggedRound, changeStrength, correctRound, isFinishedFight, logStatus, newLoggedFight, type LoggedFight, type LoggedRound } from './combat-log-state.ts';
+import { addLoggedRound, changeStrength, correctRound, isFinishedFight, logStatus, newLoggedFight, rollLoggedRound, type LoggedFight, type LoggedRound } from './combat-log-state.ts';
 import { readLoggedFight, type CharacterData } from './state.ts';
 import type { ReferenceTables } from './table-model.ts';
 
@@ -34,11 +34,18 @@ export function renderLoggedFight(fight: LoggedFight, index: number): string {
     <h3 id="logged-fight-${index}">Kampf ${index + 1}</h3>
     <div class="combat-log-values">
       ${wolf}
+      <div class="combat-log-random">
+        <span id="logged-random-${index}">Zufallszahl</span>
+        <output data-pending-random aria-labelledby="logged-random-${index}">${fight.pendingRandom ?? '–'}</output>
+      </div>
       ${field('quotient', 'Kampfquotient (KQ)', fight.quotient)}
       ${enemy}
     </div>
     <p data-fight-status role="status">${status || 'Kampf läuft.'}</p>
-    <button type="button" data-new-round ${status ? 'disabled' : ''}>Neue Runde</button>
+    <div class="combat-actions">
+      <button type="button" data-roll-round ${isFinishedFight(fight) ? 'disabled' : ''}>Würfeln</button>
+      <button type="button" data-new-round ${status ? 'disabled' : ''}>Neue Runde</button>
+    </div>
     <div data-fight-rounds>${fight.rounds.map(renderRound).join('')}</div>
     <p data-fight-error role="alert" hidden></p>
   </section>`;
@@ -68,7 +75,7 @@ export function mountCombatLog(root: HTMLElement, tables: ReferenceTables, read:
   function placeLatest(card: HTMLElement, fight: LoggedFight): void {
     const finished = isFinishedFight(fight);
     const destination = finished ? past : list;
-    card.querySelector<HTMLButtonElement>('[data-new-round]')!.hidden = finished;
+    card.querySelector<HTMLElement>('.combat-actions')!.hidden = finished;
     if (card.parentElement === destination) return;
     const hadFocus = card.contains(document.activeElement);
     destination.append(card);
@@ -84,7 +91,7 @@ export function mountCombatLog(root: HTMLElement, tables: ReferenceTables, read:
     const latest = sheet.kaempfe.length - 1;
     list.innerHTML = latest < 0 ? '' : renderLoggedFight(readLoggedFight(sheet, latest), latest);
     past.innerHTML = sheet.kaempfe.slice(0, -1).map((fight, index) => renderLoggedFight(fight, index)).join('');
-    for (const button of past.querySelectorAll<HTMLButtonElement>('[data-new-round]')) button.hidden = true;
+    for (const actions of past.querySelectorAll<HTMLElement>('.combat-actions')) actions.hidden = true;
     const card = list.firstElementChild as HTMLElement | null;
     if (card) placeLatest(card, readLoggedFight(sheet, latest));
     updateControls();
@@ -106,6 +113,8 @@ export function mountCombatLog(root: HTMLElement, tables: ReferenceTables, read:
     const status = logStatus(fight);
     card.querySelector<HTMLElement>('[data-fight-status]')!.textContent = status || 'Kampf läuft.';
     card.querySelector<HTMLButtonElement>('[data-new-round]')!.disabled = Boolean(status);
+    card.querySelector<HTMLButtonElement>('[data-roll-round]')!.disabled = isFinishedFight(fight);
+    card.querySelector<HTMLOutputElement>('[data-pending-random]')!.value = String(fight.pendingRandom ?? '–');
     for (const input of card.querySelectorAll<HTMLInputElement>('input')) {
       const row = input.closest<HTMLElement>('[data-round]');
       const [name, side] = input.name.split('-') as [string, Side];
@@ -201,6 +210,20 @@ export function mountCombatLog(root: HTMLElement, tables: ReferenceTables, read:
       render();
       setMessage('Alle Kämpfe wurden gelöscht.');
       root.querySelector<HTMLButtonElement>('[data-new-fight]')!.focus();
+    } else if (button?.hasAttribute('data-roll-round') && list.contains(button)) {
+      const card = button.closest<HTMLElement>('[data-fight]')!;
+      const index = Number(card.dataset.fight);
+      const sheet = structuredClone(read());
+      const fight = readLoggedFight(sheet, index);
+      try {
+        const digit = rollLoggedRound(fight);
+        sheet.kaempfe[index].pendingRandom = digit;
+        save(sheet);
+        card.querySelector<HTMLOutputElement>('[data-pending-random]')!.value = String(digit);
+        showError(card, '');
+      } catch (error) {
+        showError(card, error instanceof Error ? error.message : 'Die Zufallszahl konnte nicht gespeichert werden.');
+      }
     } else if (button?.hasAttribute('data-new-round') && list.contains(button)) {
       const card = button.closest<HTMLElement>('[data-fight]')!;
       const fightIndex = Number(card.dataset.fight);
