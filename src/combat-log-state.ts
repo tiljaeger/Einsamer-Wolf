@@ -17,6 +17,7 @@ export interface LoggedFight {
   quotient: number;
   current: Endurance;
   rounds: LoggedRound[];
+  pendingRandom?: number;
 }
 
 export function newLoggedFight(wolfAP: number, wolfKS: number): LoggedFight {
@@ -58,11 +59,21 @@ export function isFinishedFight(fight: LoggedFight): boolean {
   return fight.rounds.length > 0 && Boolean(logStatus(fight));
 }
 
-export function addLoggedRound(fight: LoggedFight, tables: ReferenceTables, random = Math.floor(Math.random() * 10)): void {
+export function rollLoggedRound(fight: LoggedFight, random = Math.random): number {
+  if (isFinishedFight(fight)) throw new Error('Für diesen Kampf ist keine weitere Runde möglich.');
+  const digit = Math.floor(random() * 10);
+  fight.pendingRandom = digit;
+  return digit;
+}
+
+export function addLoggedRound(fight: LoggedFight, tables: ReferenceTables): void {
   if (logStatus(fight)) throw new Error('Für diesen Kampf ist keine weitere Runde möglich.');
+  const random = fight.pendingRandom;
+  if (random === undefined) throw new Error('Bitte zuerst würfeln.');
   const { quotient, before, after, result } = previewRound(startFight(fight.current), fight.quotient, random, tables);
   fight.rounds.push({ quotient, random, before, after, losses: { wolf: result.loneWolf.loss, enemy: result.enemy.loss } });
   fight.current = { ...after };
+  delete fight.pendingRandom;
 }
 
 export function correctRound(fight: LoggedFight, index: number, field: 'quotient' | 'random' | 'loss' | 'after',
@@ -111,12 +122,13 @@ export function parseLoggedFights(value: unknown): LoggedFight[] {
   if (value === undefined) return [];
   if (!Array.isArray(value)) throw invalid();
   return value.map(entry => {
-    const { strength, quotient, current, rounds } = record(entry);
+    const { strength, quotient, current, rounds, pendingRandom } = record(entry);
     if (!Array.isArray(rounds)) throw invalid();
     return {
       strength: pair(strength, Number.MIN_SAFE_INTEGER),
       quotient: integer(quotient, Number.MIN_SAFE_INTEGER),
       current: pair(current),
+      ...(pendingRandom === undefined ? {} : { pendingRandom: integer(pendingRandom, 0, 9) }),
       rounds: rounds.map(entry => {
         const { quotient, random, losses, before, after } = record(entry);
         const effects = record(losses);

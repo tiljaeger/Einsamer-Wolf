@@ -46,10 +46,29 @@
 .combat-log-fight h3 { margin-block: 0 0.75rem; }
 .combat-log-values {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 0.65fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) repeat(2, minmax(0, 0.7fr)) minmax(0, 1fr);
   align-items: center;
   gap: clamp(0.3rem, 2vw, 0.8rem);
 }
+.combat-log-random {
+  min-width: 0;
+  font-size: 0.875rem;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+.combat-log-random output {
+  display: block;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+.combat-log .combat-actions[hidden] { display: none; }
+.sheet-app [data-roll-round]:enabled {
+  background: #24548a;
+  border-color: #24548a;
+  color: white;
+  font-weight: 700;
+}
+.sheet-app [data-roll-round]:enabled:hover { background: #34689e; }
 .combat-log fieldset {
   min-inline-size: 0;
   margin-inline: 0;
